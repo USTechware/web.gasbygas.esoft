@@ -3,43 +3,38 @@
 import AppLayout from '@/components/layouts/AppLayout';
 import Modal from '@/components/modal';
 import Button from '@/components/subcomponents/button';
+import Select from '@/components/subcomponents/select';
 import { Table } from '@/components/table';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import AreasList from '../../../public/areas.json';
+import Input from '@/components/subcomponents/input';
+import { useDispatch, useSelector } from 'react-redux';
+import { Dispatch, RootState } from '@/data';
+import { toast } from 'react-toastify';
+
+
+const DistrictsList = Object.keys(AreasList).map((d) => ({ label: d, value: d }));
+
+const CitiesList = (district: string) => (
+    ((AreasList as any)[district]?.cities || []).map((c: string) => ({ label: c, value: c }))
+)
 
 export default function Outlets() {
-    const [outlets, setOutlets] = useState([
-        {
-            id: '1',
-            name: 'Main Outlet',
-            location: '123 Elm St',
-            status: 'Open',
-            managerName: 'Alice Johnson',
-            managerEmail: 'alice.johnson@example.com',
-            managerPhoneNumber: '+1 234-567-8901',
-        },
-        {
-            id: '2',
-            name: 'Downtown Outlet',
-            location: '456 Oak Ave',
-            status: 'Closed',
-            managerName: 'Bob Smith',
-            managerEmail: 'bob.smith@example.com',
-            managerPhoneNumber: '+1 987-654-3210',
-        },
-        {
-            id: '3',
-            name: 'Uptown Outlet',
-            location: '789 Pine Rd',
-            status: 'Open',
-            managerName: 'Charlie Davis',
-            managerEmail: 'charlie.davis@example.com',
-            managerPhoneNumber: '+1 456-789-0123',
-        },
-    ]);
+
+    const dispatch = useDispatch<Dispatch>();
+
+    const outlets = useSelector((state: RootState) => state.outlets.list);
+
+    useEffect(() => {
+        dispatch.outlets.fetchOutlets();
+    }, [])
+
+    const [isLoading, setIsLoading] = useState<boolean>(false);
 
     const [isPopupOpen, setIsPopupOpen] = useState(false);
     const [formData, setFormData] = useState({
         district: '',
+        city: '',
         name: '',
         address: '',
         managerName: '',
@@ -49,6 +44,7 @@ export default function Outlets() {
 
     const [formErrors, setFormErrors] = useState({
         district: '',
+        city: '',
         name: '',
         address: '',
         managerName: '',
@@ -57,13 +53,14 @@ export default function Outlets() {
     });
 
     const columns = [
-        { key: 'id', label: 'ID' },
         { key: 'name', label: 'Name' },
-        { key: 'location', label: 'Location' },
-        { key: 'status', label: 'Status' },
-        { key: 'managerName', label: 'Manager Name' },
-        { key: 'managerEmail', label: 'Manager Email' },
-        { key: 'managerPhoneNumber', label: 'Manager Phone' },
+        { key: 'district', label: 'District' },
+        { key: 'city', label: 'City' },
+        { key: 'address', label: 'Address' },
+        { key: 'managerName', label: 'Name' },
+        { key: 'managerEmail', label: 'Email' },
+        { key: 'managerPhoneNumber', label: 'Tel' },
+        { key: '', label: 'Action' },
     ];
 
     const handleOpenPopup = () => {
@@ -73,6 +70,7 @@ export default function Outlets() {
     const handleClosePopup = () => {
         setFormData({
             district: '',
+            city: '',
             name: '',
             address: '',
             managerName: '',
@@ -81,6 +79,7 @@ export default function Outlets() {
         });
         setFormErrors({
             district: '',
+            city: '',
             name: '',
             address: '',
             managerName: '',
@@ -90,17 +89,17 @@ export default function Outlets() {
         setIsPopupOpen(false);
     };
 
-    const handleFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
+    const handleChangeField = (field: string, val: any) => {
         setFormData(prev => ({
             ...prev,
-            [name]: value,
+            [field]: val,
         }));
     };
 
     const validateForm = () => {
         const errors = {
             district: '',
+            city: '',
             name: '',
             address: '',
             managerName: '',
@@ -143,21 +142,22 @@ export default function Outlets() {
         return isValid;
     };
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (!validateForm()) return;
 
-        const newOutlet = {
-            id: (outlets.length + 1).toString(),
-            name: formData.name,
-            location: `${formData.district}, ${formData.address}`,
-            status: 'Open',
-            managerName: formData.managerName,
-            managerEmail: formData.managerEmail,
-            managerPhoneNumber: formData.managerPhoneNumber,
-        };
+        setIsLoading(true);
+        try {
+            const data = await dispatch.outlets.createOutlet(formData);
+            toast.success(data?.message || "Outlet and manager account have been created successfully")
+            dispatch.outlets.fetchOutlets()
 
-        setOutlets(prevOutlets => [...prevOutlets, newOutlet]);
-        handleClosePopup();
+            handleClosePopup();
+        } catch (error: any) {
+            toast.error(error?.response?.data?.message || "Unknown error occurred!")
+            console.log('Create outlet failed:', error);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -179,78 +179,59 @@ export default function Outlets() {
                 <Modal isOpen={isPopupOpen} onClose={() => setIsPopupOpen(false)}>
                     <Modal.Header>Create Outlet</Modal.Header>
                     <Modal.Content>
-                        <div>
-                            <label className="block mb-2 text-gray-700 dark:text-gray-100">District</label>
-                            <input
-                                type="text"
-                                name="district"
-                                value={formData.district}
-                                onChange={handleFormChange}
-                                className="w-full p-2 mb-4 border rounded-md"
+                        <div className='mb-2'>
+                            <Select label='District' value={formData.district}
+                                options={DistrictsList}
+                                onChange={handleChangeField.bind(null, 'district')}
+                                error={formErrors.district}
                             />
-                            {formErrors.district && <span className="text-red-600">{formErrors.district}</span>}
                         </div>
 
-                        <div>
-                            <label className="block mb-2 text-gray-700 dark:text-gray-100">Outlet Name</label>
-                            <input
-                                type="text"
-                                name="name"
-                                value={formData.name}
-                                onChange={handleFormChange}
-                                className="w-full p-2 mb-4 border rounded-md"
+                        <div className='mb-2'>
+                            <Select label='City' value={formData.city}
+                                options={CitiesList(formData.district)}
+                                onChange={handleChangeField.bind(null, 'city')}
+                                error={formErrors.city}
                             />
-                            {formErrors.name && <span className="text-red-600">{formErrors.name}</span>}
                         </div>
 
-                        <div>
-                            <label className="block mb-2 text-gray-700 dark:text-gray-100">Address</label>
-                            <input
-                                type="text"
-                                name="address"
-                                value={formData.address}
-                                onChange={handleFormChange}
-                                className="w-full p-2 mb-4 border rounded-md"
+
+                        <div className='mb-2'>
+                            <Input id=''
+                                label='Outlet Name' value={formData.name} onChange={handleChangeField.bind(null, 'name')}
+                                error={formErrors.name}
                             />
-                            {formErrors.address && <span className="text-red-600">{formErrors.address}</span>}
+
+                        </div>
+                        <div className='mb-2'>
+                            <Input id=''
+                                label='Address' value={formData.address} onChange={handleChangeField.bind(null, 'address')}
+                                error={formErrors.address}
+                            />
+
                         </div>
 
-                        <div>
-                            <label className="block mb-2 text-gray-700 dark:text-gray-100">Manager Name</label>
-                            <input
-                                type="text"
-                                name="managerName"
-                                value={formData.managerName}
-                                onChange={handleFormChange}
-                                className="w-full p-2 mb-4 border rounded-md"
+                        <div className='mb-2'>
+                            <Input id=''
+                                label='Manager Name' value={formData.managerName} onChange={handleChangeField.bind(null, 'managerName')}
+                                error={formErrors.managerName}
                             />
-                            {formErrors.managerName && <span className="text-red-600">{formErrors.managerName}</span>}
+
+                        </div>
+                        <div className='mb-2'>
+                            <Input id=''
+                                label='Manager Email' value={formData.managerEmail} onChange={handleChangeField.bind(null, 'managerEmail')}
+                                error={formErrors.managerEmail}
+                            />
+
                         </div>
 
-                        <div>
-                            <label className="block mb-2 text-gray-700 dark:text-gray-100">Manager Email</label>
-                            <input
-                                type="email"
-                                name="managerEmail"
-                                value={formData.managerEmail}
-                                onChange={handleFormChange}
-                                className="w-full p-2 mb-4 border rounded-md"
+                        <div className='mb-2'>
+                            <Input id=''
+                                label='Manager Phone Number' value={formData.managerPhoneNumber} onChange={handleChangeField.bind(null, 'managerPhoneNumber')}
+                                error={formErrors.managerPhoneNumber}
                             />
-                            {formErrors.managerEmail && <span className="text-red-600">{formErrors.managerEmail}</span>}
-                        </div>
 
-                        <div>
-                            <label className="block mb-2 text-gray-700 dark:text-gray-100">Manager Phone Number</label>
-                            <input
-                                type="text"
-                                name="managerPhoneNumber"
-                                value={formData.managerPhoneNumber}
-                                onChange={handleFormChange}
-                                className="w-full p-2 mb-4 border rounded-md"
-                            />
-                            {formErrors.managerPhoneNumber && (
-                                <span className="text-red-600">{formErrors.managerPhoneNumber}</span>
-                            )}
                         </div>
 
                     </Modal.Content>
@@ -258,6 +239,7 @@ export default function Outlets() {
                         <div className="flex justify-end gap-2">
                             <Button
                                 text='Submit'
+                                isLoading={isLoading}
                                 onClick={handleSubmit}
                             />
                             <Button

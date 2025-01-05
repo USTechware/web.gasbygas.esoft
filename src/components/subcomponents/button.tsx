@@ -69,19 +69,22 @@ const Button: React.FC<IButtonProps> = ({
       disabled={disabled || isLoading}
     >
       {isLoading ? (
-        <svg
-          role="status"
-          className="w-5 h-5 text-white animate-spin"
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 100 101"
-          fill="none"
-          aria-hidden="true"
-        >
-          <path
-            d="M100 50c0-27.614-22.386-50-50-50S0 22.386 0 50s22.386 50 50 50 50-22.386 50-50z"
-            fill="currentColor"
-          />
-        </svg>
+        <>
+          <svg
+            role="status"
+            className="w-5 h-5 text-white animate-spin"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 100 101"
+            fill="none"
+            aria-hidden="true"
+          >
+            <path
+              d="M100 50c0-27.614-22.386-50-50-50S0 22.386 0 50s22.386 50 50 50 50-22.386 50-50z"
+              fill="currentColor"
+            />
+          </svg>
+          Please wait
+        </>
       ) : (
         text
       )}
