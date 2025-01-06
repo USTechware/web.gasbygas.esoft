@@ -1,20 +1,20 @@
 // components/Input.tsx
-import React from 'react';
+import React, { InputHTMLAttributes } from 'react';
 import classNames from 'classnames';
 
 interface IInputProps {
-  id: string;
+  id?: string;
   label: string;
-  value: string;
+  value: number | string;
   onChange: (value: string) => void;
   placeholder?: string;
   disabled?: boolean;
   error?: string;
-  type?: 'text' | 'password' | 'email' | 'number' | 'tel';
+  type?: 'text' | 'password' | 'email' | 'date' | 'number' | 'tel';
   className?: string;
 }
 
-const Input: React.FC<IInputProps> = ({
+const Input: React.FC<IInputProps & InputHTMLAttributes<HTMLInputElement>> = ({
   id,
   label,
   value,
@@ -24,6 +24,7 @@ const Input: React.FC<IInputProps> = ({
   error = '',
   type = 'text',
   className = '',
+  ...props
 }) => {
   return (
     <div className={classNames('flex flex-col space-y-2', className)}>
@@ -52,6 +53,7 @@ const Input: React.FC<IInputProps> = ({
             'focus:ring-blue-500': !error && !disabled,
           }
         )}
+        {...props}
       />
       {error && <span className="text-xs text-red-500">{error}</span>}
     </div>

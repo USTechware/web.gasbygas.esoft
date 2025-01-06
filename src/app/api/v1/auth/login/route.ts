@@ -34,8 +34,6 @@ class LoginController {
         // Generate JWT token
         const token = AuthProvider.generateToken({ userId: user._id, email: user.email });
 
-        await DatabaseService.disconnect();
-
         // Return the response with user data and token
         return NextResponse.json(
             {

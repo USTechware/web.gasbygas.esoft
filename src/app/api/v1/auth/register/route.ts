@@ -25,8 +25,6 @@ class RegisterController {
             ...payload,
             password: await AuthProvider.encryptPassword(payload.password)
         });
-
-        await DatabaseService.disconnect();
         
         return NextResponse.json(
             {

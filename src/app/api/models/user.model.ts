@@ -1,5 +1,21 @@
 import mongoose from "mongoose";
-import { IUser } from "@/app/api/types/user";
+import { UserRole } from "../types/user";
+
+export interface IUser {
+    _id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    userRole: UserRole;
+    nationalIdNumber?: string;
+    businessRegId?: string;
+    phoneNumber: string;
+    address: string;
+    password: string;
+    outlet?: string;
+    createdAt: string;
+    updatedAt: string;
+}
 
 const userSchema = new mongoose.Schema<IUser>(
     {
@@ -11,7 +27,12 @@ const userSchema = new mongoose.Schema<IUser>(
         nationalIdNumber: { type: String, required: false },
         businessRegId: { type: String, required: false },
         phoneNumber: { type: String, required: false },
-        address: { type: String, required: false }
+        address: { type: String, required: false },
+        outlet: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Outlet',
+            required: true,
+        },
     },
     { timestamps: true }
 );

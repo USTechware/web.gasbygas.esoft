@@ -23,8 +23,6 @@ class Controller {
             );
         }
 
-        await DatabaseService.disconnect();
-
         // Return the response with user
         return NextResponse.json(
             {

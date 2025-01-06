@@ -3,50 +3,56 @@
 import AppLayout from '@/components/layouts/AppLayout';
 import Modal from '@/components/modal';
 import Button from '@/components/subcomponents/button';
+import Input from '@/components/subcomponents/input';
 import { Table } from '@/components/table';
-import { useState } from 'react';
+import { Dispatch, RootState } from '@/data';
+import moment from 'moment';
+import { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { toast } from 'react-toastify';
 
 export default function Inventory() {
-    const [currentStock, setCurrentStock] = useState(120); // Current stock of gas cylinders
-    const [inventoryHistory, setInventoryHistory] = useState([
-        { date: '2024-12-01', quantity: 50 },
-        { date: '2024-11-25', quantity: 70 },
-        { date: '2024-11-20', quantity: 100 },
-    ]);
+    const dispatch = useDispatch<Dispatch>();
+    const { currentStock, history = [] } = useSelector((state: RootState) => state.inventory)
+
+    useEffect(() => {
+        dispatch.inventory.fetchInventory();
+    }, [])
+
+    const [isLoading, setIsLoading] = useState<boolean>(false);
 
     const [isPopupOpen, setIsPopupOpen] = useState(false);
-    const [form, setForm] = useState({ quantity: '', date: '' });
-    const [formErrors, setFormErrors] = useState({ quantity: '', date: '' });
+    const [formData, setFormData] = useState({ quantity: 0, dateAdded: moment().format('YYYY-MM-YY') });
+    const [formErrors, setFormErrors] = useState({ quantity: '', dateAdded: '' });
 
     const handleAddInventory = () => {
         setIsPopupOpen(true);
     };
 
     const handleClosePopup = () => {
-        setForm({ quantity: '', date: '' });
-        setFormErrors({ quantity: '', date: '' });
+        setFormData({ quantity: 0, dateAdded: '' });
+        setFormErrors({ quantity: '', dateAdded: '' });
         setIsPopupOpen(false);
     };
 
-    const handleFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setForm((prev) => ({
+    const handleChangeField = (field: string, val: any) => {
+        setFormData(prev => ({
             ...prev,
-            [name]: value,
+            [field]: field === 'quantity' ? parseInt(val):  val,
         }));
     };
 
     const validateForm = () => {
-        const errors = { quantity: '', date: '' };
+        const errors = { quantity: '', dateAdded: '' };
         let isValid = true;
 
-        if (!form.quantity || isNaN(Number(form.quantity)) || Number(form.quantity) <= 0) {
+        if (!formData.quantity || isNaN(Number(formData.quantity)) || Number(formData.quantity) <= 0) {
             errors.quantity = 'Please enter a valid quantity';
             isValid = false;
         }
 
-        if (!form.date) {
-            errors.date = 'Please select a valid date';
+        if (!formData.dateAdded) {
+            errors.dateAdded = 'Please select a valid date';
             isValid = false;
         }
 
@@ -54,22 +60,30 @@ export default function Inventory() {
         return isValid;
     };
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (!validateForm()) return;
 
-        const newEntry = {
-            date: form.date,
-            quantity: Number(form.quantity),
-        };
+        setIsLoading(true);
+        try {
+            const data = await dispatch.inventory.createInventory(formData);
 
-        setInventoryHistory((prev) => [newEntry, ...prev]);
-        setCurrentStock((prev) => prev + newEntry.quantity);
+            toast.success(data?.message || "Inventory has been updated successfully")
+            dispatch.inventory.fetchInventory()
 
+            handleClosePopup();
+        } catch (error: any) {
+            toast.error(error?.response?.data?.message || "Unknown error occurred!")
+            console.log('Create inventory failed:', error);
+        } finally {
+            setIsLoading(false);
+        }
+
+        
         handleClosePopup();
     };
 
     const columns = [
-        { key: 'date', label: 'Date Added' },
+        { key: 'dateAdded', label: 'Date Added', render: (inv: any) => moment(inv.dateAdded).format('YYYY-MM-DD') },
         { key: 'quantity', label: 'Quantity' },
     ];
 
@@ -90,49 +104,23 @@ export default function Inventory() {
 
                 {/* History Table */}
                 <h2 className="text-xl font-bold mb-4 text-gray-700 dark:text-gray-200">Inventory History</h2>
-                <Table columns={columns} data={inventoryHistory} />
+                <Table columns={columns} data={history} />
 
                 {/* Add Inventory Popup */}
                 <Modal isOpen={isPopupOpen} onClose={() => setIsPopupOpen(false)}>
                     <Modal.Header>Add Inventory</Modal.Header>
                     <Modal.Content>
                         <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                                Quantity
-                            </label>
-                            <input
-                                type="number"
-                                name="quantity"
-                                value={form.quantity}
-                                onChange={handleFormChange}
-                                className={`block w-full px-3 py-2 rounded-md border focus:outline-none sm:text-sm 
-                                        ${formErrors.quantity
-                                        ? 'border-red-500 focus:border-red-500'
-                                        : 'border-gray-300 focus:border-blue-500'
-                                    }`}
-                            />
-                            {formErrors.quantity && (
-                                <p className="mt-2 text-sm text-red-600">{formErrors.quantity}</p>
-                            )}
+                            <Input id='' type='number'
+                                error={formErrors.quantity}
+                                min={0}
+                                value={formData.quantity} label='Qunatity' onChange={handleChangeField.bind(null, 'quantity')} />
+
                         </div>
                         <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                                Date
-                            </label>
-                            <input
-                                type="date"
-                                name="date"
-                                value={form.date}
-                                onChange={handleFormChange}
-                                className={`block w-full px-3 py-2 rounded-md border focus:outline-none sm:text-sm 
-                                        ${formErrors.date
-                                        ? 'border-red-500 focus:border-red-500'
-                                        : 'border-gray-300 focus:border-blue-500'
-                                    }`}
-                            />
-                            {formErrors.date && (
-                                <p className="mt-2 text-sm text-red-600">{formErrors.date}</p>
-                            )}
+                            <Input id='' type='date'
+                                error={formErrors.dateAdded}
+                                value={formData.dateAdded} label='Date' onChange={handleChangeField.bind(null, 'dateAdded')} />
                         </div>
                     </Modal.Content>
                     <Modal.Footer>
@@ -143,6 +131,7 @@ export default function Inventory() {
                                 onClick={handleClosePopup}
                             />
                             <Button
+                                isLoading={isLoading}
                                 text='Submit'
                                 onClick={handleSubmit}
                             />

@@ -1,6 +1,11 @@
 import mongoose, { Schema, Document } from "mongoose";
 
-interface IOutlet extends Document {
+interface IStockHistory{
+    dateAdded: string;
+    quantity: number;
+}
+
+export interface IOutlet extends Document {
     name: string;
     district: string;
     city: string;
@@ -8,6 +13,8 @@ interface IOutlet extends Document {
     managerName: string;
     managerEmail: string;
     managerPhoneNumber: string;
+    currentStock: number;
+    stockHistory: IStockHistory[]
 }
 
 const outletSchema = new Schema<IOutlet>(
@@ -18,7 +25,9 @@ const outletSchema = new Schema<IOutlet>(
         address: { type: String, required: true, trim: true },
         managerName: { type: String, required: true, trim: true },
         managerEmail: { type: String, required: true, unique: true, trim: true },
-        managerPhoneNumber: { type: String, required: true, trim: true }
+        managerPhoneNumber: { type: String, required: true, trim: true },
+        currentStock: { type: Number, required: true, trim: true },
+        stockHistory: { type: Schema.Types.Mixed, required: true, trim: true },
     },
     { timestamps: true }
 );

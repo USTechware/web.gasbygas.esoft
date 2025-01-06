@@ -6,7 +6,6 @@ const API_URL = '/';
 
 const createClient = (): AxiosInstance => {
   let token = null;
-
   if (isBrowser()) {
     token = localStorage.getItem('token');
   }

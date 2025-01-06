@@ -1,41 +1,21 @@
 import mongoose from "mongoose";
 
 class DatabaseService {
-    private static connectionReady: boolean = false;
+    private static instance: typeof mongoose | null = null;
 
-    static async connect(): Promise<void> {
-        if (mongoose.connection.readyState >= 1 || this.connectionReady) {
-            console.log("MongoDB connection already established.");
-            return;
-        }
-
-        try {
-            const url = process.env.MONGODB_URI as string;
-            await mongoose.connect(url, {
+    static async connect() {
+        if (!this.instance) {
+            this.instance = await mongoose.connect(process.env.MONGODB_URI as string, {
                 useNewUrlParser: true,
                 useUnifiedTopology: true,
-            } as any);
-
-            this.connectionReady = true;
-            console.log("MongoDB connected successfully.");
-        } catch (error: any) {
-            console.error("MongoDB connection error:", error.message || 'Unknown error');
-            throw error;
+            } as mongoose.ConnectOptions );
         }
     }
 
-    static async disconnect(): Promise<void> {
-        if (mongoose.connection.readyState === 0) {
-            console.log("No active MongoDB connection to disconnect.");
-            return;
-        }
-
-        try {
+    static async disconnect() {
+        if (this.instance) {
             await mongoose.disconnect();
-            this.connectionReady = false;
-            console.log("MongoDB disconnected successfully.");
-        } catch (error: any) {
-            console.error("MongoDB disconnection error:", error.message || 'Unknown error');
+            this.instance = null;
         }
     }
 }

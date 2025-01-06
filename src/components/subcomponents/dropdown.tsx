@@ -3,7 +3,7 @@ import classNames from 'classnames';
 
 interface DropdownMenuItem {
     label: string;
-    onClick: () => void;
+    onClick: (item?: any) => void;
 }
 
 interface DropdownMenuProps {
@@ -28,7 +28,7 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({
 
     const handleClickOutside = (e: MouseEvent) => {
         if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-            // setIsOpen(false);
+            setIsOpen(false);
         }
     };
 
@@ -40,19 +40,21 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({
     }, []);
 
     return (
-        <div className="relative inline-block text-left">
-            <div
-                className='cursor-pointer'
-                onClick={toggleMenu}
-            >
-                {buttonText}
-            </div>
+        <div className="relative inline-block text-left" ref={menuRef}>
+            {
+                items.length > 0 &&
+                <div
+                    className='cursor-pointer'
+                    onClick={toggleMenu}
+                >
+                    {buttonText}
+                </div>
+            }
 
             {isOpen && (
                 <div
-                    ref={menuRef}
                     className={classNames(
-                        'absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg dark:bg-gray-800 dark:border-gray-600',
+                        'fixed z-10 right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg dark:bg-gray-800 dark:border-gray-600',
                         menuClassName
                     )}
                 >

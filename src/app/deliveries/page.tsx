@@ -4,61 +4,94 @@ import AppLayout from '@/components/layouts/AppLayout';
 import Modal from '@/components/modal';
 import Button from '@/components/subcomponents/button';
 import { Table } from '@/components/table';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { Dispatch, RootState } from '@/data';
+import { toast } from 'react-toastify';
+import Input from '@/components/subcomponents/input';
+import Select from '@/components/subcomponents/select';
+import moment from 'moment';
+import { UserRole } from '../api/types/user';
+import StatusLabel from '@/components/status';
 
 export default function Deliveries() {
-    const [deliveries, setDeliveries] = useState([
-        { id: '1', customer: 'Alice', address: '123 Elm St', status: 'Pending', date: '2024-12-20' },
-        { id: '2', customer: 'Bob', address: '456 Oak Ave', status: 'Shipped', date: '2024-12-18' },
-        { id: '3', customer: 'Charlie', address: '789 Pine Rd', status: 'Delivered', date: '2024-12-15' },
-    ]);
+    const dispatch = useDispatch<Dispatch>();
+    const user = useSelector((state: RootState) => state.auth.user);
+    const deliveries = useSelector((state: RootState) => state.deliveries.list);
+    const outlets = useSelector((state: RootState) => state.outlets.list);
+
+    useEffect(() => {
+        dispatch.outlets.fetchOutlets();
+        dispatch.deliveries.fetchDeliveries();
+    }, [dispatch]);
+
+    const [isLoading, setIsLoading] = useState<boolean>(false);
 
     const [isPopupOpen, setIsPopupOpen] = useState(false);
-    const [form, setForm] = useState({ outlet: '', quantity: '', date: '' });
-    const [formErrors, setFormErrors] = useState({ outlet: '', quantity: '', date: '' });
+    const [formData, setFormData] = useState({
+        outlet: '',
+        quantity: 0,
+        dateOfDelivery: moment().format('YYYY-MM-DD')
+    });
+
+    const [formErrors, setFormErrors] = useState({
+        outlet: '',
+        quantity: '',
+        dateOfDelivery: ''
+    });
 
     const columns = [
-        { key: 'id', label: 'ID' },
-        { key: 'customer', label: 'Customer' },
-        { key: 'address', label: 'Address' },
-        { key: 'status', label: 'Status' },
-        { key: 'date', label: 'Date of Delivery' },
+        { key: 'outlet', label: 'Outlet', render: (delivery: any) => `${delivery.outlet.name}/${delivery.outlet.district}` },
+        { key: 'quantity', label: 'Quantity' },
+        { key: 'dateOfDelivery', label: 'Delivery Date', render: (delivery: any) => moment(delivery.dateOfDelivery).format('YYYY-MM-DD') },
+        { key: 'status', label: 'Status', render: (request: any) => <StatusLabel status={request.status} /> }
     ];
 
-    const handleScheduleDelivery = () => {
+    const handleOpenPopup = () => {
         setIsPopupOpen(true);
     };
 
     const handleClosePopup = () => {
-        setForm({ outlet: '', quantity: '', date: '' });
-        setFormErrors({ outlet: '', quantity: '', date: '' });
+        setFormData({
+            outlet: '',
+            quantity: 0,
+            dateOfDelivery: ''
+        });
+        setFormErrors({
+            outlet: '',
+            quantity: '',
+            dateOfDelivery: ''
+        });
         setIsPopupOpen(false);
     };
 
-    const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        const { name, value } = e.target;
-        setForm((prev) => ({
+    const handleChangeField = (field: string, val: any) => {
+        setFormData(prev => ({
             ...prev,
-            [name]: value,
+            [field]: field === 'quantity' ? parseInt(val):  val,
         }));
     };
 
     const validateForm = () => {
-        const errors = { outlet: '', quantity: '', date: '' };
+        const errors = {
+            outlet: '',
+            quantity: '',
+            dateOfDelivery: ''
+        };
         let isValid = true;
 
-        if (!form.outlet) {
-            errors.outlet = 'Please select an outlet';
+        if (!formData.outlet) {
+            errors.outlet = 'Outlet is required';
             isValid = false;
         }
 
-        if (!form.quantity || isNaN(Number(form.quantity)) || Number(form.quantity) <= 0) {
-            errors.quantity = 'Please enter a valid quantity';
+        if (!formData.quantity) {
+            errors.quantity = 'Quantity is required';
             isValid = false;
         }
 
-        if (!form.date) {
-            errors.date = 'Please select a valid date';
+        if (!formData.dateOfDelivery) {
+            errors.dateOfDelivery = 'Delivery date is required';
             isValid = false;
         }
 
@@ -66,19 +99,21 @@ export default function Deliveries() {
         return isValid;
     };
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (!validateForm()) return;
 
-        const newDelivery = {
-            id: String(deliveries.length + 1),
-            customer: form.outlet,
-            address: 'Selected Outlet Address', // Replace with actual outlet data
-            status: 'Scheduled',
-            date: form.date,
-        };
-
-        setDeliveries((prev) => [newDelivery, ...prev]);
-        handleClosePopup();
+        setIsLoading(true);
+        try {
+            const data = await dispatch.deliveries.createDelivery(formData);
+            toast.success(data?.message || "Delivery has been scheduled successfully");
+            dispatch.deliveries.fetchDeliveries();
+            handleClosePopup();
+        } catch (error: any) {
+            toast.error(error?.response?.data?.message || "Unknown error occurred!");
+            console.log('Create delivery failed:', error);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -87,102 +122,68 @@ export default function Deliveries() {
                 <h1 className="text-2xl font-bold mb-4 text-gray-700 dark:text-gray-200">Deliveries</h1>
 
                 {/* Schedule Delivery Button */}
-                <div className='my-2'>
-                    <Button
-                        text='Schedule a Delivery'
-                        onClick={handleScheduleDelivery}
-                    />
-                </div>
+                {user?.userRole === UserRole.DISTRIBUTOR &&
+                    <div className='my-2'>
+                        <Button
+                            text='Schedule Delivery'
+                            onClick={handleOpenPopup}
+                        />
+                    </div>
+                }
 
-                {/* Delivery Table */}
+                {/* Deliveries Table */}
                 <Table columns={columns} data={deliveries} />
 
-                {/* Popup for Scheduling Delivery */}
-                <Modal isOpen={isPopupOpen} onClose={() => setIsPopupOpen(false)}>
+                <Modal isOpen={isPopupOpen} onClose={handleClosePopup}>
                     <Modal.Header>Schedule Delivery</Modal.Header>
                     <Modal.Content>
-                        {/* Outlet Dropdown */}
-                        <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                                Select Outlet
-                            </label>
-                            <select
-                                name="outlet"
-                                value={form.outlet}
-                                onChange={handleFormChange}
-                                className={`block w-full px-3 py-2 rounded-md border focus:outline-none sm:text-sm 
-                                        ${formErrors.outlet
-                                        ? 'border-red-500 focus:border-red-500'
-                                        : 'border-gray-300 focus:border-blue-500'
-                                    }`}
-                            >
-                                <option value="">Select an Outlet</option>
-                                <option value="Outlet A">Outlet A</option>
-                                <option value="Outlet B">Outlet B</option>
-                                <option value="Outlet C">Outlet C</option>
-                            </select>
-                            {formErrors.outlet && (
-                                <p className="mt-2 text-sm text-red-600">{formErrors.outlet}</p>
-                            )}
+                        <div className='mb-2'>
+                            <Select
+                                label='Outlet'
+                                value={formData.outlet}
+                                options={outlets.map((outlet) => ({ value: String(outlet._id), label: `${outlet.name} (${outlet.district})`}))}
+                                onChange={handleChangeField.bind(null, 'outlet')}
+                                error={formErrors.outlet}
+                            />
                         </div>
 
-                        {/* Quantity Input */}
-                        <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                                Quantity
-                            </label>
-                            <input
-                                type="number"
-                                name="quantity"
-                                value={form.quantity}
-                                onChange={handleFormChange}
-                                className={`block w-full px-3 py-2 rounded-md border focus:outline-none sm:text-sm 
-                                        ${formErrors.quantity
-                                        ? 'border-red-500 focus:border-red-500'
-                                        : 'border-gray-300 focus:border-blue-500'
-                                    }`}
+                        <div className='mb-2'>
+                            <Input
+                                label='Quantity'
+                                type='number'
+                                min={0}
+                                value={formData.quantity}
+                                onChange={handleChangeField.bind(null, 'quantity')}
+                                error={formErrors.quantity}
                             />
-                            {formErrors.quantity && (
-                                <p className="mt-2 text-sm text-red-600">{formErrors.quantity}</p>
-                            )}
                         </div>
 
-                        {/* Date Input */}
-                        <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                                Date
-                            </label>
-                            <input
-                                type="date"
-                                name="date"
-                                value={form.date}
-                                onChange={handleFormChange}
-                                className={`block w-full px-3 py-2 rounded-md border focus:outline-none sm:text-sm 
-                                        ${formErrors.date
-                                        ? 'border-red-500 focus:border-red-500'
-                                        : 'border-gray-300 focus:border-blue-500'
-                                    }`}
+                        <div className='mb-2'>
+                            <Input
+                                label='Date of Delivery'
+                                value={formData.dateOfDelivery}
+                                type='date'
+                                onChange={handleChangeField.bind(null, 'dateOfDelivery')}
+                                error={formErrors.dateOfDelivery}
                             />
-                            {formErrors.date && (
-                                <p className="mt-2 text-sm text-red-600">{formErrors.date}</p>
-                            )}
                         </div>
                     </Modal.Content>
                     <Modal.Footer>
                         <div className="flex justify-end gap-2">
                             <Button
-                                color='secondary'
-                                text='Cancel'
-                                onClick={handleClosePopup}
+                                text='Submit'
+                                isLoading={isLoading}
+                                onClick={handleSubmit}
                             />
                             <Button
-                                text='Schedule'
-                                onClick={handleSubmit}
+                                text='Cancel'
+                                color='secondary'
+                                onClick={handleClosePopup}
                             />
                         </div>
                     </Modal.Footer>
                 </Modal>
             </div>
-        </AppLayout >
+        </AppLayout>
     );
 }

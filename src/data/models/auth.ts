@@ -63,7 +63,7 @@ export const auth = {
           token: result.data.token
         })
 
-        localStorage.setItem('access_token', result.data.token);
+        localStorage.setItem('token', result.data.token);
       }
       
     },
@@ -76,7 +76,7 @@ export const auth = {
     },
     async logout() {
       dispatch.auth.setLogout();
-      localStorage.removeItem('access_token');
+      localStorage.removeItem('token');
     }
   })
 };

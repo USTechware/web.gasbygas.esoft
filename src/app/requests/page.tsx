@@ -3,60 +3,52 @@
 import AppLayout from '@/components/layouts/AppLayout';
 import Modal from '@/components/modal';
 import Button from '@/components/subcomponents/button';
+import Input from '@/components/subcomponents/input';
+import Select from '@/components/subcomponents/select';
 import { Table } from '@/components/table';
-import { useState } from 'react';
+import { Dispatch, RootState } from '@/data';
+import moment from 'moment';
+import { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { toast } from 'react-toastify';
+import { UserRole } from '../api/types/user';
+import { RequestStatus } from '../api/types/requests';
+import StatusLabel from '@/components/status';
 
 export default function Requests() {
-    const [requests, setRequests] = useState([
-        {
-            id: '1',
-            customer: 'Alice Johnson',
-            outlet: 'Main Outlet',
-            quantity: 2,
-            dateRequested: '2024-12-26',
-            status: 'Pending',
-        },
-        {
-            id: '2',
-            customer: 'Bob Smith',
-            outlet: 'Downtown Outlet',
-            quantity: 1,
-            dateRequested: '2024-12-25',
-            status: 'Shipped',
-        },
-        {
-            id: '3',
-            customer: 'Charlie Davis',
-            outlet: 'Uptown Outlet',
-            quantity: 3,
-            dateRequested: '2024-12-24',
-            status: 'Delivered',
-        },
-    ]);
+    const dispatch = useDispatch<Dispatch>();
+    const user = useSelector((state: RootState) => state.auth.user);
+    const requests = useSelector((state: RootState) => state.requests.list);
+    const outlets = useSelector((state: RootState) => state.outlets.list);
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+
+
+    useEffect(() => {
+        dispatch.outlets.fetchOutlets();
+        dispatch.requests.fetchRequests();
+    }, [dispatch]);
 
     const [isPopupOpen, setIsPopupOpen] = useState(false);
     const [formData, setFormData] = useState({
-        customer: '',
         outlet: '',
-        quantity: '',
-        dateRequested: '',
-        status: 'Pending',
+        quantity: 0,
+        dateRequested: moment().format('YYYY-MM-DD'),
     });
 
     const [formErrors, setFormErrors] = useState({
-        customer: '',
         outlet: '',
         quantity: '',
         dateRequested: '',
     });
 
     const columns = [
-        { key: 'id', label: 'ID' },
-        { key: 'customer', label: 'Customer' },
-        { key: 'outlet', label: 'Outlet' },
+        { key: 'token', label: 'Token' },
+        { key: 'outlet', label: 'Outlet', render: (request: any) => `${request.outlet.name}` },
         { key: 'quantity', label: 'Quantity' },
         { key: 'dateRequested', label: 'Date Requested' },
-        { key: 'status', label: 'Status' },
+        {
+            key: 'status', label: 'Status', render: (request: any) => <StatusLabel status={request.status} />
+        },
     ];
 
     const handleOpenPopup = () => {
@@ -65,14 +57,11 @@ export default function Requests() {
 
     const handleClosePopup = () => {
         setFormData({
-            customer: '',
             outlet: '',
-            quantity: '',
+            quantity: 0,
             dateRequested: '',
-            status: 'Pending',
         });
         setFormErrors({
-            customer: '',
             outlet: '',
             quantity: '',
             dateRequested: '',
@@ -80,11 +69,10 @@ export default function Requests() {
         setIsPopupOpen(false);
     };
 
-    const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        const { name, value } = e.target;
+    const handleChangeField = (field: string, val: any) => {
         setFormData(prev => ({
             ...prev,
-            [name]: value,
+            [field]: field === 'quantity' ? parseInt(val) : val,
         }));
     };
 
@@ -96,11 +84,6 @@ export default function Requests() {
             dateRequested: '',
         };
         let isValid = true;
-
-        if (!formData.customer) {
-            errors.customer = 'Customer name is required';
-            isValid = false;
-        }
 
         if (!formData.outlet) {
             errors.outlet = 'Outlet is required';
@@ -124,17 +107,46 @@ export default function Requests() {
         return isValid;
     };
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (!validateForm()) return;
 
-        const newRequest = {
-            id: (requests.length + 1).toString(),
-            ...formData,
-        };
-
-        // setRequests(prevRequests => [...prevRequests, newRequest]);
-        handleClosePopup();
+        setIsLoading(true);
+        try {
+            const data = await dispatch.requests.createRequest(formData);
+            toast.success(data?.message || "Request has been made successfully");
+            dispatch.requests.fetchRequests();
+            handleClosePopup();
+        } catch (error: any) {
+            toast.error(error?.response?.data?.message || "Unknown error occurred!");
+            console.log('Create delivery failed:', error);
+        } finally {
+            setIsLoading(false);
+        }
     };
+
+
+    const handleIssueRequest = async (item: any) => {
+        try {
+            const data = await dispatch.requests.issueRequest({ _id: item._id });
+            toast.success(data?.message || "Request has been issued successfully");
+            dispatch.requests.fetchRequests();
+            handleClosePopup();
+        } catch (error: any) {
+            toast.error(error?.response?.data?.message || "Unknown error occurred!");
+            console.log('Create delivery failed:', error);
+        }
+    }
+    const handleExpireRequest = async (item: any) => {
+        try {
+            const data = await dispatch.requests.expireRequest({ _id: item._id });
+            toast.success(data?.message || "Request has been expired successfully");
+            dispatch.requests.fetchRequests();
+            handleClosePopup();
+        } catch (error: any) {
+            toast.error(error?.response?.data?.message || "Unknown error occurred!");
+            console.log('Create delivery failed:', error);
+        }
+    }
 
     return (
         <AppLayout>
@@ -142,63 +154,54 @@ export default function Requests() {
                 <h1 className="text-2xl font-bold mb-4 text-gray-700 dark:text-gray-200">Customer Requests</h1>
 
                 {/* Add Request Button */}
-                <div className='my-2'>
-                    <Button onClick={handleOpenPopup} text=' Create Request' />
-                </div>
+                {user?.userRole === UserRole.CUSTOMER || user?.userRole === UserRole.BUSINESS &&
+                    <div className='my-2'>
+                        <Button onClick={handleOpenPopup} text=' Create Request' />
+                    </div>
+                }
 
                 {/* Requests Table */}
-                <Table columns={columns} data={requests} />
+                <Table columns={columns} data={requests}
+                    actions={[
+                        { label: 'Issue Request', onClick: handleIssueRequest, condition: (item: any) => item.status === RequestStatus.PENDING },
+                        { label: 'Expire Request', onClick: handleExpireRequest, condition: (item: any) => item.status === RequestStatus.PENDING },
+                    ]} />
 
                 {/* Popup for Creating Request */}
                 <Modal isOpen={isPopupOpen} onClose={() => setIsPopupOpen(false)}>
                     <Modal.Header>Create Request</Modal.Header>
                     <Modal.Content>
-                        <div>
-                            <label className="block mb-2 text-gray-700 dark:text-gray-100">Customer Name</label>
-                            <input
-                                type="text"
-                                name="customer"
-                                value={formData.customer}
-                                onChange={handleFormChange}
-                                className="w-full p-2 mb-4 border rounded-md"
-                            />
-                            {formErrors.customer && <span className="text-red-600">{formErrors.customer}</span>}
-                        </div>
-
-                        <div>
-                            <label className="block mb-2 text-gray-700 dark:text-gray-100">Outlet</label>
-                            <input
-                                type="text"
-                                name="outlet"
+                        <div className='mb-2'>
+                            <Select
+                                label='Outlet'
                                 value={formData.outlet}
-                                onChange={handleFormChange}
-                                className="w-full p-2 mb-4 border rounded-md"
+                                options={outlets.map((outlet) => ({ value: String(outlet._id), label: `${outlet.name} (${outlet.district})` }))}
+                                onChange={handleChangeField.bind(null, 'outlet')}
+                                error={formErrors.outlet}
                             />
-                            {formErrors.outlet && <span className="text-red-600">{formErrors.outlet}</span>}
                         </div>
 
-                        <div>
-                            <label className="block mb-2 text-gray-700 dark:text-gray-100">Quantity</label>
-                            <input
-                                type="text"
-                                name="quantity"
+                        <div className='mb-2'>
+                            <Input
+                                label='Quantity'
+                                type='number'
+                                min={0}
                                 value={formData.quantity}
-                                onChange={handleFormChange}
-                                className="w-full p-2 mb-4 border rounded-md"
+                                onChange={handleChangeField.bind(null, 'quantity')}
+                                error={formErrors.quantity}
                             />
-                            {formErrors.quantity && <span className="text-red-600">{formErrors.quantity}</span>}
                         </div>
 
-                        <div>
-                            <label className="block mb-2 text-gray-700 dark:text-gray-100">Date Requested</label>
-                            <input
-                                type="date"
-                                name="dateRequested"
+                        <div className='mb-2'>
+                            <Input
+                                label='Date of Request'
                                 value={formData.dateRequested}
-                                onChange={handleFormChange}
-                                className="w-full p-2 mb-4 border rounded-md"
+                                type='date'
+                                min={moment().format('YYYY-MM-DD')}
+                                max={moment().add(2, 'weeks').format('YYYY-MM-DD')}
+                                onChange={handleChangeField.bind(null, 'dateRequested')}
+                                error={formErrors.dateRequested}
                             />
-                            {formErrors.dateRequested && <span className="text-red-600">{formErrors.dateRequested}</span>}
                         </div>
 
                     </Modal.Content>
@@ -206,6 +209,7 @@ export default function Requests() {
                         <div className="flex gap-2 justify-end">
                             <Button
                                 text='Submit'
+                                isLoading={isLoading}
                                 onClick={handleSubmit}
                             />
                             <Button
