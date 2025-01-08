@@ -2,7 +2,14 @@ import { HTTP_STATUS } from "@/constants/common";
 import client from "../client";
 
 interface OutletsState {
-  list: IOutlet[]
+  list: IOutlet[],
+  currentStock: number,
+  stockHistory: IStockHistory[]
+}
+
+interface IStockHistory{
+  dateAdded: string;
+  quantity: number;
 }
 
 interface IOutlet {
@@ -18,11 +25,16 @@ interface IOutlet {
 
 export const outlets = {
   state: {
-    list: []
+    list: [],
+    currentStock: 0,
+    stockHistory: []
   } as OutletsState,
   reducers: {
     setOutlets(state: OutletsState, list: any[]) {
       return { ...state, list };
+    },
+    setInventory(state: OutletsState, currentStock: number, stockHistory: IStockHistory[]) {
+      return { ...state, currentStock, stockHistory };
     },
   },
   effects: (dispatch: any) => ({
@@ -49,6 +61,26 @@ export const outlets = {
         throw error
       }
       
-    }
+    },
+    async fetchStocks() {
+      try {
+        const { status, data } = await client.get('/api/v1/outlet/stocks');
+        if (status === HTTP_STATUS.OK) {
+          dispatch.outlets.setInventory(data.currentStock, data.stockHistory || []);
+        }
+      } catch (error) {
+        throw error
+      }
+    },
+    async fetchOutletDetail(id: string) {
+      try {
+        const { status, data } = await client.post('/api/v1/outlet/detail', {id});
+        if (status === HTTP_STATUS.OK) {
+          return data || {}
+        }
+      } catch (error) {
+        throw error
+      }
+    },
   })
 };

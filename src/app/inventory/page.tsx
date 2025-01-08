@@ -1,5 +1,6 @@
 'use client';
 
+import AuthRoleCheck from '@/components/Auth';
 import AppLayout from '@/components/layouts/AppLayout';
 import Modal from '@/components/modal';
 import Button from '@/components/subcomponents/button';
@@ -10,8 +11,9 @@ import moment from 'moment';
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
+import { UserRole } from '../api/types/user';
 
-export default function Inventory() {
+function Inventory() {
     const dispatch = useDispatch<Dispatch>();
     const { currentStock, history = [] } = useSelector((state: RootState) => state.inventory)
 
@@ -142,3 +144,5 @@ export default function Inventory() {
         </AppLayout>
     );
 }
+
+export default AuthRoleCheck(Inventory, { roles: [UserRole.DISTRIBUTOR]})

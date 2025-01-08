@@ -1,5 +1,5 @@
 // components/TextArea.tsx
-import React from 'react';
+import React, { TextareaHTMLAttributes } from 'react';
 import classNames from 'classnames';
 
 interface ITextAreaProps {
@@ -15,7 +15,7 @@ interface ITextAreaProps {
     className?: string;
 }
 
-const TextArea: React.FC<ITextAreaProps> = ({
+const TextArea: React.FC<ITextAreaProps & TextareaHTMLAttributes<HTMLTextAreaElement>> = ({
     id,
     label,
     value,

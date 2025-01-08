@@ -1,23 +1,15 @@
 
-import { ValidateBody } from "@/app/api/middleware/validator";
 import DatabaseService from "@/app/api/utils/db";
-import Delivery, { IDelivery } from "@/app/api/models/deliveries.model";
-import Outlet, { IOutlet } from "@/app/api/models/outlet.model";
 import Request, { IRequest } from "@/app/api/models/request.model";
 import { HTTP_STATUS } from "@/constants/common";
 import { NextResponse } from "next/server";
 import { AuthGuard } from "../../../middleware/authenticator";
-import { CreateRequestDTO, UpdateRequestStatusDTO } from "../../../dto/requests.dto";
-import { RequestStatus } from "../../../types/requests";
-import { generateRequestToken } from "@/helpers/common";
-import moment from "moment";
 import User, { IUser } from "../../../models/user.model";
 
 class RequestsController {
 
     @AuthGuard()
-    @ValidateBody(UpdateRequestStatusDTO)
-    async PUT(req: Request) {
+    async POST(req: Request) {
         await DatabaseService.connect();
 
         const userId = (req as any).userId;
@@ -33,10 +25,10 @@ class RequestsController {
             );
         }
 
-        const payload: UpdateRequestStatusDTO = (req as any).payload;
+        const payload: { id: string, message: string } = await (req as any).json();
 
         // Ensure the request exists
-        const request: IRequest | null = await Request.findById(payload._id);
+        const request: IRequest | null = await Request.findById(payload.id);
         if (!request) {
             return NextResponse.json(
                 { message: "Invalid request ID" },
@@ -44,36 +36,34 @@ class RequestsController {
             );
         }
 
-        const outlet = await Outlet.findById(request.outlet);
+        const customer = await User.findById(request.user).select({
+            email: 1,
+        });
 
-        if (!outlet) {
+        if (!customer?.email) {
             return NextResponse.json(
-                { message: "Outlet not found" },
+                {
+                    message: "Customer email not found"
+                },
                 { status: HTTP_STATUS.BAD_REQUEST }
             );
         }
 
-        // Mark status as completed
-        request.status = RequestStatus.COMPLETED;
-        await request.save();
-
-        // Reduce from Outlet Stocks
-        outlet.currentStock = outlet.currentStock - Number(request.quantity || 0);
-        await outlet.save();
+        // SEND SMS
 
         return NextResponse.json(
             {
-                message: "Request has been issued successfully"
+                message: 'SMS is sent successfully'
             },
             { status: HTTP_STATUS.OK }
         );
     }
 }
 
-export const PUT = async (req: Request, res: Response) => {
+export const POST = async (req: Request, res: Response) => {
     const controller = new RequestsController();
     try {
-        return await controller.PUT(req);
+        return await controller.POST(req);
     } catch (error: any) {
         return NextResponse.json(
             {

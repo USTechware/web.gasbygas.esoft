@@ -16,8 +16,7 @@ import User, { IUser } from "../../../models/user.model";
 class RequestsController {
 
     @AuthGuard()
-    @ValidateBody(UpdateRequestStatusDTO)
-    async PUT(req: Request) {
+    async POST(req: Request) {
         await DatabaseService.connect();
 
         const userId = (req as any).userId;
@@ -33,10 +32,10 @@ class RequestsController {
             );
         }
 
-        const payload: UpdateRequestStatusDTO = (req as any).payload;
+        const payload: { id: string } = await (req as any).json();
 
         // Ensure the request exists
-        const request: IRequest | null = await Request.findById(payload._id);
+        const request: IRequest | null = await Request.findById(payload.id);
         if (!request) {
             return NextResponse.json(
                 { message: "Invalid request ID" },
@@ -44,36 +43,30 @@ class RequestsController {
             );
         }
 
-        const outlet = await Outlet.findById(request.outlet);
 
-        if (!outlet) {
-            return NextResponse.json(
-                { message: "Outlet not found" },
-                { status: HTTP_STATUS.BAD_REQUEST }
-            );
-        }
-
-        // Mark status as completed
-        request.status = RequestStatus.COMPLETED;
-        await request.save();
-
-        // Reduce from Outlet Stocks
-        outlet.currentStock = outlet.currentStock - Number(request.quantity || 0);
-        await outlet.save();
+        const customer = await User.findById(request.user).select({
+            firstName: 1,
+            lastName: 1,
+            address: 1,
+            email: 1,
+            nationalIdNumber: 1,
+            phoneNumber: 1,
+            _id: 0
+        });
 
         return NextResponse.json(
             {
-                message: "Request has been issued successfully"
+                customer
             },
             { status: HTTP_STATUS.OK }
         );
     }
 }
 
-export const PUT = async (req: Request, res: Response) => {
+export const POST = async (req: Request, res: Response) => {
     const controller = new RequestsController();
     try {
-        return await controller.PUT(req);
+        return await controller.POST(req);
     } catch (error: any) {
         return NextResponse.json(
             {

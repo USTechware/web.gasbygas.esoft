@@ -11,6 +11,9 @@ import Input from '@/components/subcomponents/input';
 import { useDispatch, useSelector } from 'react-redux';
 import { Dispatch, RootState } from '@/data';
 import { toast } from 'react-toastify';
+import ViewOutlet from '@/components/outlets/ViewOutlet';
+import AuthRoleCheck from '@/components/Auth';
+import { UserRole } from '../api/types/user';
 
 
 const DistrictsList = Object.keys(AreasList).map((d) => ({ label: d, value: d }));
@@ -19,7 +22,7 @@ const CitiesList = (district: string) => (
     ((AreasList as any)[district]?.cities || []).map((c: string) => ({ label: c, value: c }))
 )
 
-export default function Outlets() {
+function Outlets() {
 
     const dispatch = useDispatch<Dispatch>();
 
@@ -30,6 +33,8 @@ export default function Outlets() {
     }, [])
 
     const [isLoading, setIsLoading] = useState<boolean>(false);
+
+    const [currentOutlet, setCurrentOutlet] = useState<{ id: string, action: 'view' } | null>(null)
 
     const [isPopupOpen, setIsPopupOpen] = useState(false);
     const [formData, setFormData] = useState({
@@ -59,8 +64,7 @@ export default function Outlets() {
         { key: 'address', label: 'Address' },
         { key: 'managerName', label: 'Name' },
         { key: 'managerEmail', label: 'Email' },
-        { key: 'managerPhoneNumber', label: 'Tel' },
-        { key: '', label: 'Action' },
+        { key: 'managerPhoneNumber', label: 'Tel' }
     ];
 
     const handleOpenPopup = () => {
@@ -160,6 +164,11 @@ export default function Outlets() {
         }
     };
 
+
+    const onViewOutlet = (item: any) => {
+        setCurrentOutlet({ id: item._id , action: 'view'})
+    }
+
     return (
         <AppLayout>
             <div className="min-h-screen bg-gray-100 dark:bg-gray-800 p-4">
@@ -174,7 +183,11 @@ export default function Outlets() {
                 </div>
 
                 {/* Outlets Table */}
-                <Table columns={columns} data={outlets} />
+                <Table columns={columns} data={outlets}
+                    actions={[
+                    { label: 'View Outlet', onClick: onViewOutlet}
+                ]}
+                />
 
                 <Modal isOpen={isPopupOpen} onClose={() => setIsPopupOpen(false)}>
                     <Modal.Header>Create Outlet</Modal.Header>
@@ -250,7 +263,12 @@ export default function Outlets() {
                         </div>
                     </Modal.Footer>
                 </Modal>
+                {
+                    currentOutlet && currentOutlet.action === 'view' && <ViewOutlet id={currentOutlet.id} onClose={() => setCurrentOutlet(null)} />
+                }
             </div>
         </AppLayout>
     );
 }
+
+export default AuthRoleCheck(Outlets, { roles: [UserRole.DISTRIBUTOR]})

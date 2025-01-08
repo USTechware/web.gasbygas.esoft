@@ -13,10 +13,15 @@ class RegisterController {
         await DatabaseService.connect();
         const payload: RegisterUserDTO = (req as any).payload;
 
-        const existingUser = await User.findOne({ where: { email: payload.email } });
+        const existingUser = await User.findOne({
+            $or: [
+                { email: payload.email },
+                { nationalIdNumber: payload.nationalIdNumber },
+            ]
+        });
         if (existingUser) {
             return NextResponse.json(
-                { message: "User already exists" },
+                { message: "User already exists with same email or NIC number" },
                 { status: HTTP_STATUS.BAD_REQUEST }
             );
         }
@@ -25,7 +30,7 @@ class RegisterController {
             ...payload,
             password: await AuthProvider.encryptPassword(payload.password)
         });
-        
+
         return NextResponse.json(
             {
                 message: "User has been created successfully"

@@ -13,8 +13,9 @@ import Select from '@/components/subcomponents/select';
 import moment from 'moment';
 import { UserRole } from '../api/types/user';
 import StatusLabel from '@/components/status';
+import AuthRoleCheck from '@/components/Auth';
 
-export default function Deliveries() {
+function Deliveries() {
     const dispatch = useDispatch<Dispatch>();
     const user = useSelector((state: RootState) => state.auth.user);
     const deliveries = useSelector((state: RootState) => state.deliveries.list);
@@ -187,3 +188,5 @@ export default function Deliveries() {
         </AppLayout>
     );
 }
+
+export default AuthRoleCheck(Deliveries, { roles: [UserRole.DISTRIBUTOR, UserRole.OUTLET_MANAGER]})

@@ -14,14 +14,34 @@ import { toast } from 'react-toastify';
 import { UserRole } from '../api/types/user';
 import { RequestStatus } from '../api/types/requests';
 import StatusLabel from '@/components/status';
+import { IRequest } from '../api/models/request.model';
+import ViewCustomer from '@/components/requests/ViewCustomer';
+import SendSMS from '@/components/requests/SendSMS';
+import AuthRoleCheck from '@/components/Auth';
 
-export default function Requests() {
+function Requests() {
     const dispatch = useDispatch<Dispatch>();
     const user = useSelector((state: RootState) => state.auth.user);
     const requests = useSelector((state: RootState) => state.requests.list);
     const outlets = useSelector((state: RootState) => state.outlets.list);
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
+    const [currentRequest, setCurrentRequest] = useState<{ id: string, action: 'view' | 'sms' } | null>(null)
+
+    const [filteredRequests, setFilteredRequests] = useState<IRequest[]>([])
+    const [searchToken, setSearchToken] = useState<string>('');
+    const onSearchToken = (field: string, val: any) => {
+        setSearchToken(val)
+    };
+
+    useEffect(() => {
+        let filtered = requests
+        if (searchToken) {
+            filtered = requests.filter(r => r.token?.toLowerCase().includes(searchToken.toLocaleLowerCase()))
+        }
+
+        setFilteredRequests(filtered as any)
+    }, [searchToken, requests])
 
     useEffect(() => {
         dispatch.outlets.fetchOutlets();
@@ -148,6 +168,15 @@ export default function Requests() {
         }
     }
 
+    const handleViewCustomer = async (item: any) => {
+        setCurrentRequest({ id: item._id , action: 'view'})
+
+    }
+
+    const handleSendMessage = async (item: any) => {
+        setCurrentRequest({ id: item._id , action: 'sms'})
+    }
+
     return (
         <AppLayout>
             <div className="min-h-screen bg-gray-100 dark:bg-gray-800 p-4">
@@ -161,10 +190,16 @@ export default function Requests() {
                 }
 
                 {/* Requests Table */}
-                <Table columns={columns} data={requests}
+                <div className='my-2 w-1/2'>
+                    <Input label='Search by Token' placeholder='Search by Token' name='token' value={searchToken}
+                        onChange={onSearchToken.bind(null, 'token')} />
+                </div>
+                <Table columns={columns} data={filteredRequests}
                     actions={[
                         { label: 'Issue Request', onClick: handleIssueRequest, condition: (item: any) => item.status === RequestStatus.PENDING },
                         { label: 'Expire Request', onClick: handleExpireRequest, condition: (item: any) => item.status === RequestStatus.PENDING },
+                        { label: 'View Customer', onClick: handleViewCustomer },
+                        { label: 'Send Message', onClick: handleSendMessage },
                     ]} />
 
                 {/* Popup for Creating Request */}
@@ -220,7 +255,17 @@ export default function Requests() {
                         </div>
                     </Modal.Footer>
                 </Modal>
+
+
+                {
+                    currentRequest && currentRequest.action === 'view' && <ViewCustomer id={currentRequest.id} onClose={() => setCurrentRequest(null)} />
+                }
+                {
+                    currentRequest && currentRequest.action === 'sms' && <SendSMS id={currentRequest.id} onClose={() => setCurrentRequest(null)} />
+                }
             </div>
         </AppLayout>
     );
 }
+
+export default AuthRoleCheck(Requests, { roles: [UserRole.BUSINESS, UserRole.CUSTOMER, UserRole.OUTLET_MANAGER]})

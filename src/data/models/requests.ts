@@ -81,6 +81,26 @@ export const requests = {
       } catch (error) {
         throw error
       }
+    },
+    async fetchCustomerDetail(id: string) {
+      try {
+        const { status, data } = await client.post(`/api/v1/requests/customer`, { id });
+        if (status === HTTP_STATUS.OK) {
+          return data;
+        }
+      } catch (error) {
+        throw error
+      }
+    },
+    async sendSMS(payload: { id: string, message: string}) {
+      try {
+        const { status, data } = await client.post(`/api/v1/requests/sms`, payload);
+        if (status === HTTP_STATUS.OK) {
+          return data;
+        }
+      } catch (error) {
+        throw error
+      }
     }
   })
 };
