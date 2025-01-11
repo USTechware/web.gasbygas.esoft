@@ -57,7 +57,7 @@ export default function LoginPage() {
         setIsLoading(true);
         try {
             await dispatch.auth.login(form);
-            toast.success("Logged in successfully, redirecting...")
+            toast.success("Logged in successfully!")
         } catch (error: any) {
             toast.error(error?.response?.data?.message || "Unknown error occurred!")
             console.log('Login failed:', error);

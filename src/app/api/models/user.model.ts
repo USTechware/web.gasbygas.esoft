@@ -31,7 +31,7 @@ const userSchema = new mongoose.Schema<IUser>(
         outlet: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Outlet',
-            required: true,
+            required: false,
         },
     },
     { timestamps: true }

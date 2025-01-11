@@ -28,11 +28,11 @@ export default function AppLayout({ children }: AppLayoutProps) {
             <Sidebar />
 
             {/* Main Content */}
-            <div className="flex-1">
+            <div className="flex-1 overflow-hidden">
                 {/* Header */}
                 <Header />
                 {/* Page Content */}
-                <main className="p-6">
+                <main className="p-6 overflow-x-scroll">
                     {children}
                 </main>
             </div>

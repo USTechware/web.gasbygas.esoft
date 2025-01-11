@@ -2,7 +2,7 @@
 
 import React from 'react';
 import DropdownMenu from '../subcomponents/dropdown';
-import { DotIcon, EditIcon, OptionIcon } from 'lucide-react';
+import { EditIcon } from 'lucide-react';
 
 interface TableProps {
     columns: { key: string; label: string, render?: (item: any) => void }[];

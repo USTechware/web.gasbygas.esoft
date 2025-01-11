@@ -4,30 +4,22 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import AppLayout from '@/components/layouts/AppLayout';
 import DashboardWidget from '@/components/widget';
-import { Building2Icon, CalculatorIcon, CogIcon, ShipIcon } from 'lucide-react';
+import { Building2Icon, CalculatorIcon, CogIcon, ShipIcon, ShoppingCart } from 'lucide-react';
 import Button from '@/components/subcomponents/button';
 import { useDispatch, useSelector } from 'react-redux';
 import { Dispatch, RootState } from '@/data';
+import useUser from '@/hooks/useUser';
+import useDashboard from '@/hooks/useDashboard';
 
 export default function Dashboard() {
-    const dispatch = useDispatch<Dispatch>();
-    const user = useSelector((state: RootState) => state.auth.user)
-    const [isLoading, setIsLoading] = useState(true);
-
-    useEffect(() => {
-        const fetchUser = async () => {
-            dispatch.auth.fetchUser();
-            setIsLoading(false)
-        };
-
-        fetchUser();
-    }, []);
-
+    const { user, isDistributor, isOutletManager, isCustomer, isBusiness } = useUser();
+    const data = useDashboard();
+    
     return (
         <AppLayout>
             <div className="min-h-screen bg-gray-100 dark:bg-gray-800">
                 <div className="container mx-auto py-8 px-4">
-                    {isLoading ? (
+                    {!data ? (
                         <p className="text-center text-lg text-gray-600 dark:text-gray-300">Loading...</p>
                     ) : (
                         <div>
@@ -36,13 +28,31 @@ export default function Dashboard() {
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    <DashboardWidget icon={<Building2Icon/>} title='Outlets' children={ 20 } />
-                                    <DashboardWidget icon={<CalculatorIcon/>} title='Inventry' children={ 1450 } />
-                                    <DashboardWidget icon={<ShipIcon/>} title='Deliveries' children={200} footer={ 'Pending'} />
-                            </div>
-
-                            <div className="mt-8">
-                                    <Button text=' Go to Outlets' onClick={() => { window.location.href = "/outlets"}} />
+                                {
+                                    isDistributor &&
+                                    <>
+                                        <DashboardWidget icon={<Building2Icon />} title='Outlets' path='/outlets' children={data.outlets} />
+                                        <DashboardWidget icon={<CalculatorIcon />} title='Inventry' path='/inventory' children={data.inventory} />
+                                        <DashboardWidget icon={<ShoppingCart />} title='Requests' children={data.requests} />
+                                        <DashboardWidget icon={<ShipIcon />} title='Deliveries'  path='/deliveries' children={data.deliveries} />
+                                    </>
+                                    }
+                                    
+                                    {
+                                    isOutletManager &&
+                                    <>
+                                        <DashboardWidget icon={<CalculatorIcon />} title='Stocks' path='/stocks' children={data.stocks} />
+                                        <DashboardWidget icon={<ShoppingCart />} title='Requests' path='/requests' children={data.requests} />
+                                        <DashboardWidget icon={<ShipIcon />} title='Deliveries'  path='/deliveries' children={data.deliveries} />
+                                    </>
+                                    }
+                                    
+                                    {
+                                    (isCustomer || isBusiness) &&
+                                    <>
+                                        <DashboardWidget icon={<ShoppingCart />} title='Requests' path='/requests' children={data.requests} />
+                                         </>
+                                }
                             </div>
                         </div>
                     )}

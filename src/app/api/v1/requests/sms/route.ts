@@ -5,6 +5,7 @@ import { HTTP_STATUS } from "@/constants/common";
 import { NextResponse } from "next/server";
 import { AuthGuard } from "../../../middleware/authenticator";
 import User, { IUser } from "../../../models/user.model";
+import SMSService from "@/app/api/lib/SMSService.lib";
 
 class RequestsController {
 
@@ -37,19 +38,23 @@ class RequestsController {
         }
 
         const customer = await User.findById(request.user).select({
-            email: 1,
+            phoneNumber: 1,
         });
 
-        if (!customer?.email) {
+        if (!customer?.phoneNumber) {
             return NextResponse.json(
                 {
-                    message: "Customer email not found"
+                    message: "Customer phone number not found"
                 },
                 { status: HTTP_STATUS.BAD_REQUEST }
             );
         }
 
         // SEND SMS
+        await new SMSService().send(
+            customer.phoneNumber,
+            payload.message.substring(0, 100)
+        )
 
         return NextResponse.json(
             {

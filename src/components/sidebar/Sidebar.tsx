@@ -61,7 +61,7 @@ export default function Sidebar() {
     const [collapsed, setCollapsed] = useState(false);
 
     return (
-        <div className={`bg-gray-800 text-white transition-all ${collapsed ? 'w-16' : 'w-64'}`}>
+        <div className={`bg-gray-800 text-white transition-all ${collapsed ? 'w-16' : 'min-w-[250px] w-[250px]'}`}>
             {/* Logo */}
             <div className="h-16 flex items-center justify-between px-4">
                 {!collapsed && <Logo />}

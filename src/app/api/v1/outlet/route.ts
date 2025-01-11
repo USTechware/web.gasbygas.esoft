@@ -7,6 +7,7 @@ import { HTTP_STATUS } from "@/constants/common";
 import { NextResponse } from "next/server";
 import AuthProvider from "@/app/api/utils/auth";
 import { AuthGuard } from "../../middleware/authenticator";
+import EmailService from "../../lib/EmailService.lib";
 
 class OutletController {
     @AuthGuard()
@@ -36,18 +37,42 @@ class OutletController {
             district: payload.district
         });
 
+
         if (existingOutlet) {
             return NextResponse.json(
                 { message: "Outlet already exists in this district" },
                 { status: HTTP_STATUS.BAD_REQUEST }
             );
         }
-
         // Check if the manager's email is already associated with a user
         const existingUser = await User.findOne({ email: payload.managerEmail });
+
         if (existingUser) {
             return NextResponse.json(
                 { message: "Manager email already exists" },
+                { status: HTTP_STATUS.BAD_REQUEST }
+            );
+        }
+
+
+        // Create the outlet
+        const outlet = await Outlet.create({
+            name: payload.name,
+            district: payload.district,
+            city: payload.city,
+            address: payload.address,
+            managerName: payload.managerName,
+            managerEmail: payload.managerEmail,
+            managerPhoneNumber: payload.managerPhoneNumber,
+            currentStock: 0,
+            stockHistory: []
+        });
+
+        if (!outlet) {
+            return NextResponse.json(
+                {
+                    message: "Failed to create the outlet",
+                },
                 { status: HTTP_STATUS.BAD_REQUEST }
             );
         }
@@ -63,24 +88,16 @@ class OutletController {
             userRole: "OUTLET_MANAGER",
             password: await AuthProvider.encryptPassword(tempPassword),
             phoneNumber: payload.managerPhoneNumber,
-            address: payload.address
-        });
-
-        // Create the outlet
-        const outlet = await Outlet.create({
-            name: payload.name,
-            district: payload.district,
-            city: payload.city,
             address: payload.address,
-            managerName: payload.managerName,
-            managerEmail: payload.managerEmail,
-            managerPhoneNumber: payload.managerPhoneNumber,
-            currentStock: 0,
-            stockHistory: []
+            outlet: outlet._id
         });
 
         // Send the temporary password to the manager's email
-        // TODO: SEND Email
+        await EmailService.sendOutletCreationEmail(
+            payload.managerName,
+            payload.managerEmail,
+            tempPassword
+        )
 
         return NextResponse.json(
             {
@@ -97,6 +114,7 @@ export const POST = async (req: Request, res: Response) => {
     try {
         return await controller.POST(req);
     } catch (error: any) {
+        console.log("ERRR", error)
         return NextResponse.json(
             {
                 message: error.message || "Unknown error"
@@ -114,7 +132,7 @@ export const GET = async (req: Request, res: Response) => {
     try {
         return await controller.GET(req);
     } catch (error: any) {
-        console.log("ERRR", error)
+
         return NextResponse.json(
             {
                 message: error.message || "Unknown error"
