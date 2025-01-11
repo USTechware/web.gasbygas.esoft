@@ -1,51 +1,52 @@
-import { LoginUserDTO } from "@/app/api/dto/user.dto";
+import { ChangePassowordDTO } from "@/app/api/dto/user.dto";
 import { ValidateBody } from "@/app/api/middleware/validator";
 import DatabaseService from "@/app/api/utils/db";
 import User from "@/app/api/models/user.model";
 import { HTTP_STATUS } from "@/constants/common";
 import { NextResponse } from "next/server";
 import AuthProvider from "@/app/api/utils/auth";
+import { AuthGuard } from "@/app/api/middleware/authenticator";
 
-class LoginController {
-    @ValidateBody(LoginUserDTO)
+class ChangePasswordController {
+    @AuthGuard()
+    @ValidateBody(ChangePassowordDTO)
     async POST(req: Request) {
-        const payload = (req as any).payload;
+        const userId = (req as any).userId;
 
         await DatabaseService.connect();
 
-        // Find the user by email
-        const user = await User.findOne({ email: payload.email });
+        // Find the user by ID
+        const user = await User.findOne({ _id: userId });
         if (!user) {
             return NextResponse.json(
                 { message: "User not found" },
                 { status: HTTP_STATUS.BAD_REQUEST }
             );
         }
+        const payload: ChangePassowordDTO = (req as any).payload;
+
 
         // Verify the password
-        const isPasswordValid = await AuthProvider.matchPassword(payload.password, user.password);
+        const isPasswordValid = await AuthProvider.matchPassword(payload.currentPassword, user.password);
         if (!isPasswordValid) {
             return NextResponse.json(
-                { message: "Invalid credentials" },
+                { message: "Invalid current password" },
                 { status: HTTP_STATUS.BAD_REQUEST }
             );
         }
 
-        // Generate JWT token
-        const token = AuthProvider.generateToken({ userId: user._id, email: user.email });
+        // Encript New Password
+        const encryptPassword = await AuthProvider.encryptPassword(payload.newPassword);
+
+        // Update New Password
+        user.password = encryptPassword
+        user.requestChangePassword = false
+        await user.save();
 
         // Return the response with user data and token
         return NextResponse.json(
             {
-                user: {
-                    _id: user._id,
-                    firstName: user.firstName,
-                    lastName: user.lastName,
-                    userRole: user.userRole,
-                    email: user.email,
-                    requestChangePassword: user.requestChangePassword
-                },
-                token,
+                message: "User password has been updated successfully"
             },
             { status: HTTP_STATUS.OK }
         );
@@ -53,7 +54,7 @@ class LoginController {
 }
 
 export const POST = async (req: Request, res: Response) => {
-    const controller = new LoginController();
+    const controller = new ChangePasswordController();
     try {
         return await controller.POST(req);
     } catch (error: any) {

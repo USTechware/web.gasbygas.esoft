@@ -2,8 +2,9 @@ import { ReactNode, useEffect } from 'react';
 import Sidebar from '../sidebar/Sidebar';
 import Header from '../header/Header';
 import { useRouter } from 'next/navigation';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/data';
+import useUser from '@/hooks/useUser';
 
 interface AppLayoutProps {
     children: ReactNode;
@@ -11,16 +12,24 @@ interface AppLayoutProps {
 
 export default function AppLayout({ children }: AppLayoutProps) {
 
-
+    const dispatch = useDispatch()
     const { replace: navigate } = useRouter();
 
-    const isLoggedIn = useSelector((state: RootState) => state.auth.isLoggedIn);
+    const { isLoggedIn, user } = useSelector((state: RootState) => state.auth)
+
+    useEffect(() => {
+        dispatch.auth.fetchUser();
+    }, [])
 
     useEffect(() => {
         if (!isLoggedIn) {
             navigate('/auth/login')
+        } else {
+            if (user && user.requestChangePassword) {
+                navigate('/settings/change-password')
+            }
         }
-    }, [isLoggedIn, navigate])
+    }, [isLoggedIn, navigate, user])
 
     return (
         <div className="min-h-screen flex">

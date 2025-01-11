@@ -13,6 +13,7 @@ export interface IUser {
     address: string;
     password: string;
     outlet?: string;
+    requestChangePassword?: boolean;
     createdAt: string;
     updatedAt: string;
 }
@@ -28,6 +29,7 @@ const userSchema = new mongoose.Schema<IUser>(
         businessRegId: { type: String, required: false },
         phoneNumber: { type: String, required: false },
         address: { type: String, required: false },
+        requestChangePassword: { type: Boolean, required: false },
         outlet: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Outlet',

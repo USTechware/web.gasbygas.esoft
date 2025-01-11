@@ -89,7 +89,8 @@ class OutletController {
             password: await AuthProvider.encryptPassword(tempPassword),
             phoneNumber: payload.managerPhoneNumber,
             address: payload.address,
-            outlet: outlet._id
+            outlet: outlet._id,
+            requestChangePassword: true
         });
 
         // Send the temporary password to the manager's email

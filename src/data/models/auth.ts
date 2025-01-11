@@ -13,7 +13,8 @@ interface IUser {
   firstName: string;
   lastName: string;
   email: string;
-  userRole: UserRole
+  userRole: UserRole;
+  requestChangePassword?: boolean
 }
 
 interface ILoginPayload {
@@ -34,7 +35,10 @@ interface IRegisterPayload {
   userRole: 'BUSINESS' | 'CUSTOMER';
   businessRegId?: string;
 }
-
+interface IChangePasswordPayload {
+  currentPassword: string;
+  newPassword: string;
+}
 export const auth = {
   state: {
     isLoggedIn: false,
@@ -44,8 +48,11 @@ export const auth = {
     setLoggedIn(state: AuthState, payload: boolean) {
       return { ...state, isLoggedIn: payload };
     },
-    setUser(state: AuthState, payload: AuthState['user']) {
+    setUser(state: AuthState, payload: AuthState) {
       return { ...state, ...payload };
+    },
+    updateUser(state: AuthState, payload: AuthState['user']) {
+      return { ...state, user: { ...(state.user || {}), ...payload } };
     },
     setLogout(state: AuthState) {
       return { ...state, isLoggedIn: false, user: null };
@@ -53,7 +60,7 @@ export const auth = {
   },
   effects: (dispatch: any) => ({
     async login(payload: ILoginPayload) {
-      
+
       const result = await client.post('/api/v1/auth/login', payload)
 
       if (result.status === HTTP_STATUS.OK) {
@@ -65,14 +72,28 @@ export const auth = {
 
         localStorage.setItem('token', result.data.token);
       }
-      
+
     },
     async fetchUser() {
+      const result = await client.get('/api/v1/user/fetch-user')
+
+      if (result.status === HTTP_STATUS.OK) {
+        dispatch.auth.setUser({
+          user: result.data.user
+        })
+      }
     },
     async register(payload: IRegisterPayload) {
       await client.post('/api/v1/auth/register', payload)
     },
     async forgotPassword(payload: { email: string; }) {
+    },
+    async changePassword(payload: IChangePasswordPayload) {
+      const result = await client.post('/api/v1/auth/change-password', payload)
+      if (result.status === HTTP_STATUS.OK) {
+        dispatch.auth.updateUser({ requestChangePassword: false })
+        return result.data
+      }
     },
     async logout() {
       dispatch.auth.setLogout();

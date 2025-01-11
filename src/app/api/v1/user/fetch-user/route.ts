@@ -29,6 +29,7 @@ class Controller {
                     lastName: user.lastName,
                     userRole: user.userRole,
                     email: user.email,
+                    requestChangePassword: user.requestChangePassword
                 }
             },
             { status: HTTP_STATUS.OK }

@@ -1,16 +1,9 @@
 import { UserRole } from "@/app/api/types/user";
-import { Dispatch, RootState } from "@/data"
-import { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux"
+import { RootState } from "@/data"
+import { useSelector } from "react-redux"
 
 const useUser = () => {
-    const dispatch = useDispatch<Dispatch>();
     const { user, isLoggedIn } = useSelector((state: RootState) => state.auth);
-
-
-    useEffect(() => {
-        dispatch.auth.fetchUser();
-    }, [dispatch]);
 
     return {
         user,

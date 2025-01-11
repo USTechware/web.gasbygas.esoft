@@ -24,6 +24,7 @@ const AuthRoleCheck = <P extends object>(
                 router.replace('/auth/login')
                 return
             }
+            if(!roles.length) return
             if (!roles.includes(user.userRole)) {
                 router.replace(redirectTo);
             }

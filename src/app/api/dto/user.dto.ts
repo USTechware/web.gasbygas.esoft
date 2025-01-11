@@ -41,3 +41,12 @@ export class LoginUserDTO {
     @IsNotEmpty({ message: "Password is required" })
     password!: string;
 }
+
+export class ChangePassowordDTO {
+
+    @IsNotEmpty({ message: "Current Password is required" })
+    currentPassword!: string;
+
+    @IsNotEmpty({ message: "New Password is required" })
+    newPassword!: string;
+}

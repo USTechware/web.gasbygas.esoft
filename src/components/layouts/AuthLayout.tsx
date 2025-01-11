@@ -1,9 +1,9 @@
 'use client';
 
-import { RootState } from '@/data';
+import { Dispatch, RootState } from '@/data';
 import { useRouter } from 'next/navigation';
 import { ReactNode, useEffect } from 'react';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import Logo from '../logo';
 
 interface AuthLayoutProps {
@@ -18,13 +18,17 @@ export default function AuthLayout({
     title = 'Welcome back'
 }: AuthLayoutProps) {
     const { replace: navigate } = useRouter();
-    const isLoggedIn = useSelector((state: RootState) => state.auth.isLoggedIn);
+    const user = useSelector((state: RootState) => state.auth.user);
 
     useEffect(() => {
-        if (isLoggedIn) {
-            navigate('/dashboard')
+        if (user) {
+            if (user.requestChangePassword) {
+                navigate('/settings/change-password')
+            } else {
+                navigate('/dashboard')
+            }
         }
-    }, [isLoggedIn, navigate])
+    }, [navigate, user])
 
     return (
         <div className="min-h-screen flex flex-col justify-center py-12 bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
