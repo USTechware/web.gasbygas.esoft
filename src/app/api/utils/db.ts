@@ -5,10 +5,14 @@ class DatabaseService {
 
     static async connect() {
         if (!this.instance) {
-            this.instance = await mongoose.connect(process.env.MONGODB_URI as string, {
-                useNewUrlParser: true,
-                useUnifiedTopology: true,
-            } as mongoose.ConnectOptions );
+            try {
+                this.instance = await mongoose.connect(process.env.MONGODB_URI as string, {
+                    useNewUrlParser: true,
+                    useUnifiedTopology: true,
+                } as mongoose.ConnectOptions);
+            } catch (error) {
+                console.log(`Error: MongoDB connection`, error)
+            }
         }
     }
 
