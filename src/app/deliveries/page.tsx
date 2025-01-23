@@ -4,7 +4,7 @@ import AppLayout from '@/components/layouts/AppLayout';
 import Modal from '@/components/modal';
 import Button from '@/components/subcomponents/button';
 import { Table } from '@/components/table';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Dispatch, RootState } from '@/data';
 import { toast } from 'react-toastify';
@@ -14,6 +14,7 @@ import moment from 'moment';
 import { UserRole } from '../api/types/user';
 import StatusLabel from '@/components/status';
 import AuthRoleCheck from '@/components/Auth';
+import { DeliveryStatus } from '../api/types/deliveries';
 
 function Deliveries() {
     const dispatch = useDispatch<Dispatch>();
@@ -117,6 +118,28 @@ function Deliveries() {
         }
     };
 
+
+    const handleConfirmDelivery = async (item: any) => {
+        try {
+            const data = await dispatch.deliveries.confirmDelivery({ _id: item._id });
+            toast.success(data?.message || "Delivery has been confirmed recieved successfully");
+            dispatch.deliveries.fetchDeliveries();
+            handleClosePopup();
+        } catch (error: any) {
+            toast.error(error?.response?.data?.message || "Unknown error occurred!");
+            console.log('Create delivery failed:', error);
+        }
+    }
+    const actions = useMemo(() => {
+        if (user?.userRole === UserRole.OUTLET_MANAGER) {
+            return [
+                { label: 'Confirm Delivery', onClick: handleConfirmDelivery, condition: (item: any) => item.status === DeliveryStatus.PENDING },
+            ]
+        }else {
+            return []
+        }
+    }, [user])
+
     return (
         <AppLayout>
             <div className="min-h-screen bg-gray-100 dark:bg-gray-800 p-4">
@@ -133,7 +156,7 @@ function Deliveries() {
                 }
 
                 {/* Deliveries Table */}
-                <Table columns={columns} data={deliveries} />
+                <Table columns={columns} data={deliveries} actions={actions}/>
 
                 <Modal isOpen={isPopupOpen} onClose={handleClosePopup}>
                     <Modal.Header>Schedule Delivery</Modal.Header>

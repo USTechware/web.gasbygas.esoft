@@ -54,7 +54,7 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({
             {isOpen && (
                 <div
                     className={classNames(
-                        'fixed z-10 right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg dark:bg-gray-800 dark:border-gray-600',
+                        'sticky z-10 mb-0 right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg dark:bg-gray-800 dark:border-gray-600',
                         menuClassName
                     )}
                 >

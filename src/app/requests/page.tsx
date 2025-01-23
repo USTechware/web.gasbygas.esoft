@@ -8,7 +8,7 @@ import Select from '@/components/subcomponents/select';
 import { Table } from '@/components/table';
 import { Dispatch, RootState } from '@/data';
 import moment from 'moment';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { UserRole } from '../api/types/user';
@@ -18,15 +18,26 @@ import { IRequest } from '../api/models/request.model';
 import ViewCustomer from '@/components/requests/ViewCustomer';
 import SendSMS from '@/components/requests/SendSMS';
 import AuthRoleCheck from '@/components/Auth';
+import Rescheduler from '@/components/requests/Rescheduler';
+import useUser from '@/hooks/useUser';
+import Transfer from '@/components/requests/Transfer';
 
 function Requests() {
     const dispatch = useDispatch<Dispatch>();
-    const user = useSelector((state: RootState) => state.auth.user);
+    const { user, isCustomer, isBusiness, isOutletManager } = useUser()
     const requests = useSelector((state: RootState) => state.requests.list);
     const outlets = useSelector((state: RootState) => state.outlets.list);
+    const customers = useSelector((state: RootState) => state.outlets.customers);
     const [isLoading, setIsLoading] = useState<boolean>(false);
+    useEffect(() => {
 
-    const [currentRequest, setCurrentRequest] = useState<{ id: string, action: 'view' | 'sms' } | null>(null)
+        if (isOutletManager) {
+            dispatch.outlets.fetchCustomers()
+        }
+
+    }, [isOutletManager])
+
+    const [currentRequest, setCurrentRequest] = useState<{ id: string, item: any, action: 'view' | 'sms' | 'rescheduler' | 'transfer' } | null>(null)
 
     const [filteredRequests, setFilteredRequests] = useState<IRequest[]>([])
     const [searchToken, setSearchToken] = useState<string>('');
@@ -50,26 +61,34 @@ function Requests() {
 
     const [isPopupOpen, setIsPopupOpen] = useState(false);
     const [formData, setFormData] = useState({
+        customerId: null,
         outlet: '',
         quantity: 0,
-        dateRequested: moment().format('YYYY-MM-DD'),
     });
 
     const [formErrors, setFormErrors] = useState({
+        customerId: '',
         outlet: '',
         quantity: '',
-        dateRequested: '',
     });
 
     const columns = [
         { key: 'token', label: 'Token' },
         { key: 'outlet', label: 'Outlet', render: (request: any) => `${request.outlet.name}` },
         { key: 'quantity', label: 'Quantity' },
-        { key: 'dateRequested', label: 'Date Requested' },
+        { key: 'deadlineForPickup', label: 'Deadline(Pickup)', render: (request: any) => moment(request.deadlineForPickup).format('YYYY-MM-DD') },
         {
             key: 'status', label: 'Status', render: (request: any) => <StatusLabel status={request.status} />
         },
     ];
+
+    if (isOutletManager) {
+        columns.splice(
+            1,
+            1,
+            { key: 'user', label: 'Customer/Business', render: (request: any) => `${request.user.firstName} ${request.user.lastName}` },
+        )
+    }
 
     const handleOpenPopup = () => {
         setIsPopupOpen(true);
@@ -77,14 +96,14 @@ function Requests() {
 
     const handleClosePopup = () => {
         setFormData({
+            customerId: null,
             outlet: '',
             quantity: 0,
-            dateRequested: '',
         });
         setFormErrors({
+            customerId: '',
             outlet: '',
             quantity: '',
-            dateRequested: '',
         });
         setIsPopupOpen(false);
     };
@@ -98,15 +117,19 @@ function Requests() {
 
     const validateForm = () => {
         const errors = {
-            customer: '',
+            customerId: '',
             outlet: '',
             quantity: '',
-            dateRequested: '',
         };
         let isValid = true;
 
-        if (!formData.outlet) {
+        if ((isCustomer || isBusiness) && !formData.outlet) {
             errors.outlet = 'Outlet is required';
+            isValid = false;
+        }
+
+        if (isOutletManager && !formData.customerId) {
+            errors.customerId = 'Customer/Business is required';
             isValid = false;
         }
 
@@ -115,11 +138,6 @@ function Requests() {
             isValid = false;
         } else if (isNaN(Number(formData.quantity))) {
             errors.quantity = 'Quantity must be a number';
-            isValid = false;
-        }
-
-        if (!formData.dateRequested) {
-            errors.dateRequested = 'Date requested is required';
             isValid = false;
         }
 
@@ -132,7 +150,17 @@ function Requests() {
 
         setIsLoading(true);
         try {
-            const data = await dispatch.requests.createRequest(formData);
+            const payload: any = {
+                quantity: formData.quantity,
+                customerId: undefined,
+                outlet: undefined,
+            }
+            if (isOutletManager) {
+                payload.customerId = formData.customerId
+            } else {
+                payload.outlet = formData.outlet
+            }
+            const data = await dispatch.requests.createRequest(payload);
             toast.success(data?.message || "Request has been made successfully");
             dispatch.requests.fetchRequests();
             handleClosePopup();
@@ -156,6 +184,28 @@ function Requests() {
             console.log('Create delivery failed:', error);
         }
     }
+
+
+    const handleCancelRequest = async (item: any) => {
+        try {
+            const data = await dispatch.requests.cancelRequest({ _id: item._id });
+            toast.success(data?.message || "Request has been cancelled successfully");
+            dispatch.requests.fetchRequests();
+            handleClosePopup();
+        } catch (error: any) {
+            toast.error(error?.response?.data?.message || "Unknown error occurred!");
+            console.log('Cancel delivery failed:', error);
+        }
+    }
+
+    const handleResceduleRequest = async (item: any) => {
+        setCurrentRequest({ id: item._id, item, action: 'rescheduler' })
+    }
+
+    const handleTransferRequest = async (item: any) => {
+        setCurrentRequest({ id: item._id, item, action: 'transfer' })
+    }
+
     const handleExpireRequest = async (item: any) => {
         try {
             const data = await dispatch.requests.expireRequest({ _id: item._id });
@@ -169,13 +219,39 @@ function Requests() {
     }
 
     const handleViewCustomer = async (item: any) => {
-        setCurrentRequest({ id: item._id , action: 'view'})
+        setCurrentRequest({ id: item._id, item, action: 'view' })
 
     }
 
     const handleSendMessage = async (item: any) => {
-        setCurrentRequest({ id: item._id , action: 'sms'})
+        setCurrentRequest({ id: item._id, item, action: 'sms' })
     }
+
+
+    const actions = useMemo(() => {
+        if (user?.userRole === UserRole.OUTLET_MANAGER) {
+            return [
+                { label: 'Issue Request', onClick: handleIssueRequest, condition: (item: any) => item.status === RequestStatus.PENDING },
+                { label: 'Expire Request', onClick: handleExpireRequest, condition: (item: any) => item.status === RequestStatus.PENDING },
+                { label: 'Cancel Request', onClick: handleCancelRequest, condition: (item: any) => item.status === RequestStatus.PENDING },
+                { label: 'Reschedule Request', onClick: handleResceduleRequest, condition: (item: any) => item.status === RequestStatus.PENDING },
+                { label: 'Transfer Request', onClick: handleTransferRequest, condition: (item: any) => item.status === RequestStatus.PENDING },
+                { label: 'View Customer', onClick: handleViewCustomer },
+                { label: 'Send Message', onClick: handleSendMessage },
+            ]
+        } else if (user?.userRole === UserRole.CUSTOMER || user?.userRole === UserRole.BUSINESS) {
+            return [
+                { label: 'Cancel Request', onClick: handleCancelRequest, condition: (item: any) => item.status === RequestStatus.PENDING },
+            ]
+        } else {
+            return []
+        }
+    }, [user])
+
+    const showAddRequest = useMemo(() => {
+        if (!user || !user.userRole) return false
+        return [UserRole.CUSTOMER, UserRole.BUSINESS, UserRole.OUTLET_MANAGER].includes(user.userRole)
+    }, [user?.userRole])
 
     return (
         <AppLayout>
@@ -183,7 +259,7 @@ function Requests() {
                 <h1 className="text-2xl font-bold mb-4 text-gray-700 dark:text-gray-200">Customer Requests</h1>
 
                 {/* Add Request Button */}
-                {user?.userRole === UserRole.CUSTOMER || user?.userRole === UserRole.BUSINESS &&
+                {showAddRequest &&
                     <div className='my-2'>
                         <Button onClick={handleOpenPopup} text=' Create Request' />
                     </div>
@@ -195,25 +271,30 @@ function Requests() {
                         onChange={onSearchToken.bind(null, 'token')} />
                 </div>
                 <Table columns={columns} data={filteredRequests}
-                    actions={[
-                        { label: 'Issue Request', onClick: handleIssueRequest, condition: (item: any) => item.status === RequestStatus.PENDING },
-                        { label: 'Expire Request', onClick: handleExpireRequest, condition: (item: any) => item.status === RequestStatus.PENDING },
-                        { label: 'View Customer', onClick: handleViewCustomer },
-                        { label: 'Send Message', onClick: handleSendMessage },
-                    ]} />
+                    actions={actions} />
 
                 {/* Popup for Creating Request */}
                 <Modal isOpen={isPopupOpen} onClose={() => setIsPopupOpen(false)}>
                     <Modal.Header>Create Request</Modal.Header>
                     <Modal.Content>
                         <div className='mb-2'>
-                            <Select
-                                label='Outlet'
-                                value={formData.outlet}
-                                options={outlets.map((outlet) => ({ value: String(outlet._id), label: `${outlet.name} (${outlet.district})` }))}
-                                onChange={handleChangeField.bind(null, 'outlet')}
-                                error={formErrors.outlet}
-                            />
+                            {
+                                user?.userRole === UserRole.OUTLET_MANAGER ?
+                                    <Select
+                                        label='Customer/Business'
+                                        value={formData.customerId}
+                                        options={(customers || []).map((customer) => ({ value: String(customer._id), label: `${customer.firstName} (${customer.lastName}) - ${customer.email}` }))}
+                                        onChange={handleChangeField.bind(null, 'customerId')}
+                                        error={formErrors.outlet}
+                                    /> :
+                                    <Select
+                                        label='Outlet'
+                                        value={formData.outlet}
+                                        options={outlets.map((outlet) => ({ value: String(outlet._id), label: `${outlet.name} (${outlet.district})` }))}
+                                        onChange={handleChangeField.bind(null, 'outlet')}
+                                        error={formErrors.outlet}
+                                    />
+                            }
                         </div>
 
                         <div className='mb-2'>
@@ -224,18 +305,6 @@ function Requests() {
                                 value={formData.quantity}
                                 onChange={handleChangeField.bind(null, 'quantity')}
                                 error={formErrors.quantity}
-                            />
-                        </div>
-
-                        <div className='mb-2'>
-                            <Input
-                                label='Date of Request'
-                                value={formData.dateRequested}
-                                type='date'
-                                min={moment().format('YYYY-MM-DD')}
-                                max={moment().add(2, 'weeks').format('YYYY-MM-DD')}
-                                onChange={handleChangeField.bind(null, 'dateRequested')}
-                                error={formErrors.dateRequested}
                             />
                         </div>
 
@@ -263,9 +332,17 @@ function Requests() {
                 {
                     currentRequest && currentRequest.action === 'sms' && <SendSMS id={currentRequest.id} onClose={() => setCurrentRequest(null)} />
                 }
+
+                {
+                    currentRequest && currentRequest.action === 'rescheduler' && <Rescheduler id={currentRequest.id} min={currentRequest.item?.deadlineForPickup} onClose={() => setCurrentRequest(null)} />
+                }
+
+                {
+                    currentRequest && currentRequest.action === 'transfer' && <Transfer id={currentRequest.id} onClose={() => setCurrentRequest(null)} />
+                }
             </div>
         </AppLayout>
     );
 }
 
-export default AuthRoleCheck(Requests, { roles: [UserRole.BUSINESS, UserRole.CUSTOMER, UserRole.OUTLET_MANAGER]})
+export default AuthRoleCheck(Requests, { roles: [UserRole.BUSINESS, UserRole.CUSTOMER, UserRole.OUTLET_MANAGER] })

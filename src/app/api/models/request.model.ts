@@ -6,7 +6,7 @@ export interface IRequest extends Document {
     outlet: Types.ObjectId;
     user: Types.ObjectId;
     quantity: Number;
-    dateRequested: String
+    deadlineForPickup: String
     token: String
     status: RequestStatus
 }
@@ -28,7 +28,7 @@ const RequestSchema = new mongoose.Schema<IRequest>(
             required: true,
             min: 1,
         },
-        dateRequested: {
+        deadlineForPickup: {
             type: String,
             required: true
         },

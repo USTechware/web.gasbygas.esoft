@@ -8,6 +8,7 @@ import { HTTP_STATUS } from "@/constants/common";
 import { NextResponse } from "next/server";
 import { AuthGuard } from "@/app/api/middleware/authenticator";
 import { UserRole } from "../../types/user";
+import { RequestStatus } from "../../types/requests";
 
 class Controller {
     @AuthGuard()
@@ -43,10 +44,12 @@ class Controller {
                 break;
 
             case UserRole.OUTLET_MANAGER:
-                console.log(user)
                 const stockCount = (await Outlet.findById(user.outlet)).currentStock;
-                const outletRequestsCount = await Request.countDocuments({ outlet: userId });
-                const outletDeliveriesCount = await Delivery.countDocuments({ outlet: userId });
+                const outletRequestsCount = await Request.countDocuments({
+                    outlet: user.outlet, status: {
+                    $nin: [RequestStatus.CANCELLED]
+                } });
+                const outletDeliveriesCount = await Delivery.countDocuments({ outlet: user.outlet });
 
                 data = {
                     stocks: stockCount,

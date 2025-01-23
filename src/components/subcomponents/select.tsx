@@ -6,7 +6,7 @@ import classNames from 'classnames';
 interface SelectProps {
   label: string;
   options: { label: string; value: string }[];
-  value: string;
+  value: string | null;
   onChange: (value: string) => void;
   disabled?: boolean;
   error?: string;

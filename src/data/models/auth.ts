@@ -14,6 +14,7 @@ interface IUser {
   lastName: string;
   email: string;
   userRole: UserRole;
+  outlet?: string;
   requestChangePassword?: boolean
 }
 

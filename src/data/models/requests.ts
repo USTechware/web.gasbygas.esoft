@@ -11,11 +11,12 @@ interface IRequest {
   outlet: string;
   quantity: number;
   token?: string;
-  dateRequested: string;
+  deadlineForPickup?: string;
   status?: RequestStatus;
 }
 interface IUpdateRequest {
   _id?: string;
+  outlet?: string;
   status?: RequestStatus;
 }
 
@@ -71,6 +72,25 @@ export const requests = {
         throw error
       }
     },
+    async cancelRequest(payload: IUpdateRequest) {
+      try {
+        const { status, data } = await client.put('/api/v1/requests/cancel', payload);
+        if (status === HTTP_STATUS.CREATED) {
+          dispatch.requests.updateRequestStatus(payload._id, RequestStatus.COMPLETED)
+          return data;
+        }
+      } catch (error) {
+        throw error
+      }
+    },
+    async rescheduleRequest(payload: any) {
+      try {
+        const { status, data } = await client.put('/api/v1/requests/reschedule', payload);
+        return data
+      } catch (error) {
+        throw error
+      }
+    },
     async expireRequest(payload: IUpdateRequest) {
       try {
         const { status, data } = await client.put('/api/v1/requests/expire', payload);
@@ -101,6 +121,16 @@ export const requests = {
       } catch (error) {
         throw error
       }
-    }
+    },
+    async transfer(payload: IUpdateRequest) {
+      try {
+        const { status, data } = await client.put('/api/v1/requests/transfer', payload);
+        if (status === HTTP_STATUS.OK) {
+          return data;
+        }
+      } catch (error) {
+        throw error
+      }
+    },
   })
 };

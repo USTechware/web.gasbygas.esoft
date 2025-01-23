@@ -24,8 +24,4 @@ export class UpdateDeliveryStatusDTO {
     @IsNotEmpty({ message: "Delivery ID is required" })
     @IsMongoId({ message: "Delivery ID must be a valid MongoDB ObjectId" })
     _id!: string;
-
-    @IsNotEmpty({ message: "Status is required" })
-    @IsEnum(DeliveryStatus, { message: `Status must be one of: ${Object.values(DeliveryStatus).join(", ")}` })
-    status!: DeliveryStatus;
 }

@@ -14,6 +14,7 @@ import moment from "moment";
 import User, { IUser } from "../../models/user.model";
 import { UserRole } from "../../types/user";
 import { FilterQuery } from "mongoose";
+import EmailService from "../../lib/EmailService.lib";
 
 class RequestsController {
 
@@ -33,7 +34,11 @@ class RequestsController {
 
         await DatabaseService.connect();
 
-        let query: FilterQuery<IRequest> = {}
+        let query: FilterQuery<IRequest> = {
+            status: {
+                $nin: [RequestStatus.CANCELLED]
+            }
+        }
 
         if ([UserRole.CUSTOMER, UserRole.BUSINESS].includes(user.userRole)) {
             query.user = userId
@@ -44,7 +49,9 @@ class RequestsController {
         }
 
 
-        const requests = await Request.find(query).populate('outlet');
+        const requests = await Request.find(query).populate('outlet', {
+            name: 1, district: 1, city: 1
+        }).populate('user', { firstName: 1, lastName: 1 , email: 1});
 
         return NextResponse.json(
             requests,
@@ -58,7 +65,7 @@ class RequestsController {
 
         const userId = (req as any).userId;
 
-        const user = await User.findById(userId);
+        const user: IUser | null = await User.findById(userId);
 
         if (!user) {
             return NextResponse.json(
@@ -71,8 +78,13 @@ class RequestsController {
 
         const payload: CreateRequestDTO = (req as any).payload;
 
+        const customerId = payload.customerId ?? userId;
+        const outletId = payload.outlet ?? user.outlet;
+
+        const customer = await User.findById(customerId)
+
         // Ensure the outlet exists
-        const outletExists: IOutlet | null = await Outlet.findById(payload.outlet);
+        const outletExists: IOutlet | null = await Outlet.findById(outletId);
         if (!outletExists) {
             return NextResponse.json(
                 { message: "Invalid outlet ID" },
@@ -85,7 +97,7 @@ class RequestsController {
 
         // Expected Deliveries within next 2 weeks
         const upcomingDeliveries = (await Delivery.find({
-            outlet: outletExists._id,
+            outlet: outletId,
             dateOfDelivery: {
                 $lte: moment().add(2, 'weeks')
             }
@@ -97,8 +109,8 @@ class RequestsController {
 
         // Current Requests
         const currentRequests = (await Request.find({
-            outlet: outletExists._id,
-            dateRequested: {
+            outlet: outletId,
+            deadlineForPickup: {
                 $lte: moment().add(2, 'weeks')
             },
             status: RequestStatus.PENDING
@@ -117,15 +129,27 @@ class RequestsController {
             );
         }
 
+        const token = generateRequestToken(outletExists);
+        const deadlineForPickup = moment().add(2, 'weeks').toISOString()
         // Create the request
         const newRequest = await Request.create({
-            outlet: payload.outlet,
-            user,
-            token: generateRequestToken(outletExists),
+            outlet: outletId,
+            user: customerId,
+            token,
             quantity: payload.quantity,
-            dateRequested: payload.dateRequested,
+            deadlineForPickup,
             status: RequestStatus.PENDING
         });
+
+
+        // Send Email
+        await EmailService.notifyNewRequest(
+            customer.firstName,
+            customer.email,
+            token,
+            deadlineForPickup,
+            payload.quantity
+        )
 
         return NextResponse.json(
             {
@@ -137,7 +161,7 @@ class RequestsController {
     }
 }
 
-export const PUT = async (req: Request, res: Response) => {
+export const POST = async (req: Request, res: Response) => {
     const controller = new RequestsController();
     try {
         return await controller.POST(req);

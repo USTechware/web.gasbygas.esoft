@@ -6,7 +6,14 @@ interface DeliveryState {
 }
 
 interface IDelivery {
+  _id?: string
+  outlet: string,
+  quantity: number,
+  dateOfDelivery: string
+}
 
+interface IUpdateDelivery {
+  _id?: string
 }
 
 export const deliveries = {
@@ -33,6 +40,16 @@ export const deliveries = {
       try {
         const { status, data } = await client.post('/api/v1/deliveries', payload);
         if (status === HTTP_STATUS.CREATED) {
+          return data;
+        }
+      } catch (error) {
+        throw error
+      }
+    },
+    async confirmDelivery(payload: IUpdateDelivery) {
+      try {
+        const { status, data } = await client.put('/api/v1/deliveries/confirm', payload);
+        if (status === HTTP_STATUS.OK) {
           return data;
         }
       } catch (error) {

@@ -3,19 +3,40 @@ import User from "@/app/api/models/user.model";
 import { HTTP_STATUS } from "@/constants/common";
 import { NextResponse } from "next/server";
 import { AuthGuard } from "@/app/api/middleware/authenticator";
+import { UserRole } from "@/app/api/types/user";
 
 class Controller {
     @AuthGuard()
     async get(req: Request) {
         const userId = (req as any).userId;
 
-        await DatabaseService.connect();
+        const user = await User.findById(userId);
 
-        // Find the user by email
-        const user = await User.findOne({ _id: userId });
         if (!user) {
             return NextResponse.json(
-                { message: "User not found" },
+                {
+                    message: "User not found",
+                },
+                { status: HTTP_STATUS.UNAUTHORIZED }
+            );
+        }
+
+        await DatabaseService.connect();
+
+        // Find customers and business users list
+        const customers = await User.find({
+            userRole: {
+                $in: [UserRole.CUSTOMER, UserRole.BUSINESS]
+            }
+        }).select({
+            _id: 1,
+            email: 1,
+            firstName: 1,
+            lastName: 1
+        });
+        if (!customers) {
+            return NextResponse.json(
+                { message: "Customers not found" },
                 { status: HTTP_STATUS.BAD_REQUEST }
             );
         }
@@ -23,15 +44,7 @@ class Controller {
         // Return the response with user
         return NextResponse.json(
             {
-                user: {
-                    _id: user._id,
-                    firstName: user.firstName,
-                    lastName: user.lastName,
-                    userRole: user.userRole,
-                    email: user.email,
-                    outlet: user.outlet,
-                    requestChangePassword: user.requestChangePassword
-                }
+                customers
             },
             { status: HTTP_STATUS.OK }
         );

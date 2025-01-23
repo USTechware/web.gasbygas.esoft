@@ -3,6 +3,7 @@ import client from "../client";
 
 interface OutletsState {
   list: IOutlet[],
+  customers: any[],
   currentStock: number,
   stockHistory: IStockHistory[]
 }
@@ -26,12 +27,16 @@ interface IOutlet {
 export const outlets = {
   state: {
     list: [],
+    customers: [],
     currentStock: 0,
     stockHistory: []
   } as OutletsState,
   reducers: {
     setOutlets(state: OutletsState, list: any[]) {
       return { ...state, list };
+    },
+    setCustomers(state: OutletsState, customers: any[]) {
+      return { ...state, customers };
     },
     setInventory(state: OutletsState, currentStock: number, stockHistory: IStockHistory[]) {
       return { ...state, currentStock, stockHistory };
@@ -67,6 +72,16 @@ export const outlets = {
         const { status, data } = await client.get('/api/v1/outlet/stocks');
         if (status === HTTP_STATUS.OK) {
           dispatch.outlets.setInventory(data.currentStock, data.stockHistory || []);
+        }
+      } catch (error) {
+        throw error
+      }
+    },
+    async fetchCustomers() {
+      try {
+        const { status, data } = await client.get('/api/v1/user/customers');
+        if (status === HTTP_STATUS.OK) {
+          dispatch.outlets.setCustomers(data.customers);
         }
       } catch (error) {
         throw error
