@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import classNames from 'classnames';
 
 interface SelectProps {
+  name?: string;
   label: string;
   options: { label: string; value: string }[];
   value: string | null;
@@ -14,6 +15,7 @@ interface SelectProps {
 }
 
 const Select: React.FC<SelectProps> = ({
+  name,
   label,
   options,
   value,

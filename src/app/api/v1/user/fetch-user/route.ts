@@ -12,7 +12,8 @@ class Controller {
         await DatabaseService.connect();
 
         // Find the user by email
-        const user = await User.findOne({ _id: userId });
+        const user = await User.findOne({ _id: userId })
+            .populate('outlet', { name: 1, _id: 0 });
         if (!user) {
             return NextResponse.json(
                 { message: "User not found" },
@@ -43,6 +44,7 @@ export const GET = async (req: Request, res: Response) => {
     try {
         return await controller.get(req);
     } catch (error: any) {
+        console.log(error)
         return NextResponse.json(
             {
                 message: error.message || "Unknown error",

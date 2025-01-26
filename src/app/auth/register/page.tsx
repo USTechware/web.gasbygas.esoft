@@ -8,8 +8,18 @@ import { Dispatch } from '@/data';
 import Button from '@/components/subcomponents/button';
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation';
+import Select from '@/components/subcomponents/select';
+import AreasList from '../../../../public/areas.json';
+import Input from '@/components/subcomponents/input';
 
 type UserType = 'CUSTOMER' | 'BUSINESS';
+
+const DistrictsList = Object.keys(AreasList).map((d) => ({ label: d, value: d }));
+
+const CitiesList = (district: string) => (
+    ((AreasList as any)[district]?.cities || []).map((c: string) => ({ label: c, value: c }))
+)
+
 
 interface FormData {
     firstName: string;
@@ -18,6 +28,8 @@ interface FormData {
     password: string;
     confirmPassword: string;
     nationalIdNumber: string;
+    district: string;
+    city: string;
     address: string;
     phoneNumber: string;
     userRole: UserType;
@@ -34,6 +46,8 @@ export default function RegisterPage() {
         password: '',
         confirmPassword: '',
         nationalIdNumber: '',
+        district: '',
+        city: '',
         address: '',
         phoneNumber: '',
         userRole: 'CUSTOMER'
@@ -121,212 +135,99 @@ export default function RegisterPage() {
         }
     };
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-        const { name, value } = e.target;
+    const handleChangeField = (field: string, val: any) => {
         setForm(prev => ({
             ...prev,
-            [name]: value
+            [field]: val,
         }));
-        // Clear error when user starts typing
-        if (errors[name as keyof typeof errors]) {
-            setErrors(prev => ({
-                ...prev,
-                [name]: ''
-            }));
-        }
     };
 
-    const inputClassName = (error?: string) => `
-        block w-full appearance-none rounded-md border px-3 py-2 shadow-sm focus:outline-none sm:text-sm 
-        dark:bg-gray-700 dark:text-white dark:placeholder-gray-400
-        ${error
-            ? 'border-red-300 focus:border-red-500 focus:ring-red-500 dark:border-red-600 dark:focus:border-red-500'
-            : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:focus:border-blue-400'
-        }
-    `;
 
     return (
         <AuthLayout title="Create your account">
             <form className="space-y-6" onSubmit={handleSubmit}>
+
                 <div>
-                    <label htmlFor="userRole" className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-                        Account Type
-                    </label>
-                    <select
-                        id="userRole"
-                        name="userRole"
-                        value={form.userRole}
-                        onChange={handleChange}
-                        className={inputClassName()}
-                    >
-                        <option value="CUSTOMER">Individual</option>
-                        <option value="BUSINESS">Business</option>
-                    </select>
+                    <Select label='Account Type' value={form.userRole}
+                        onChange={handleChangeField.bind(null, 'userRole')}
+                        options={[{ label: 'Individual', value: 'CUSTOMER' }, { label: 'Business', value: 'BUSINESS' }]} />
                 </div>
 
                 <div>
-                    <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-                        First Name
-                    </label>
-                    <input
-                        id="firstName"
-                        name="firstName"
-                        type="text"
-                        required
-                        value={form.firstName}
-                        onChange={handleChange}
-                        className={inputClassName(errors.firstName)}
-                    />
-                    {errors.firstName && (
-                        <p className="mt-2 text-sm text-red-600 dark:text-red-400">{errors.firstName}</p>
-                    )}
+                    <Input id='' label='First Name' value={form.firstName}
+                        error={errors.firstName} placeholder='First Name'
+                        onChange={handleChangeField.bind(null, 'firstName')} />
                 </div>
 
                 <div>
-                    <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-                        Last Name
-                    </label>
-                    <input
-                        id="lastName"
-                        name="lastName"
-                        type="text"
-                        required
-                        value={form.lastName}
-                        onChange={handleChange}
-                        className={inputClassName(errors.lastName)}
-                    />
-                    {errors.lastName && (
-                        <p className="mt-2 text-sm text-red-600 dark:text-red-400">{errors.lastName}</p>
-                    )}
+                    <Input id='' label='Last Name' value={form.lastName}
+                        error={errors.lastName} placeholder='Last Name'
+                        onChange={handleChangeField.bind(null, 'lastName')} />
                 </div>
 
                 <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-                        Email address
-                    </label>
-                    <input
-                        id="email"
-                        name="email"
-                        type="email"
-                        autoComplete="email"
-                        required
-                        value={form.email}
-                        onChange={handleChange}
-                        className={inputClassName(errors.email)}
-                    />
-                    {errors.email && (
-                        <p className="mt-2 text-sm text-red-600 dark:text-red-400">{errors.email}</p>
-                    )}
+                    <Input id='' label='Email' value={form.email}
+                        error={errors.email} placeholder='Email'
+                        onChange={handleChangeField.bind(null, 'email')} />
                 </div>
-
                 <div>
-                    <label htmlFor="nic" className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-                        NIC Number
-                    </label>
-                    <input
-                        id="nationalIdNumber"
-                        name="nationalIdNumber"
-                        type="text"
-                        required
-                        value={form.nationalIdNumber}
-                        onChange={handleChange}
-                        className={inputClassName(errors.nationalIdNumber)}
-                    />
-                    {errors.nationalIdNumber && (
-                        <p className="mt-2 text-sm text-red-600 dark:text-red-400">{errors.nationalIdNumber}</p>
-                    )}
+                    <Input id='' label=' NIC Number' placeholder='NIC Number' value={form.nationalIdNumber}
+                        error={errors.nationalIdNumber}
+                        onChange={handleChangeField.bind(null, 'nationalIdNumber')} />
                 </div>
 
                 {form.userRole === 'BUSINESS' && (
                     <div>
-                        <label htmlFor="businessRegId" className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-                            Business Registration ID
-                        </label>
-                        <input
-                            id="businessRegId"
-                            name="businessRegId"
-                            type="text"
-                            required
-                            value={form.businessRegId}
-                            onChange={handleChange}
-                            className={inputClassName(errors.businessRegId)}
-                        />
-                        {errors.businessRegId && (
-                            <p className="mt-2 text-sm text-red-600 dark:text-red-400">{errors.businessRegId}</p>
-                        )}
+                        <Input id='' label='Business Registration ID' placeholder='Business Registration ID' value={form.businessRegId || ''}
+                            error={errors.businessRegId}
+                            onChange={handleChangeField.bind(null, 'businessRegId')} />
                     </div>
                 )}
 
                 <div>
-                    <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-                        Phone Number
-                    </label>
-                    <input
-                        id="phoneNumber"
-                        name="phoneNumber"
-                        type="tel"
-                        required
-                        value={form.phoneNumber}
-                        onChange={handleChange}
-                        className={inputClassName(errors.phoneNumber)}
+                    <Input id='' label='Phone Number' placeholder='Phone Number' value={form.phoneNumber || ''}
+                        error={errors.phoneNumber}
+                        onChange={handleChangeField.bind(null, 'phoneNumber')} />
+                </div>
+                <div className='mb-2'>
+                    <Select label='District' value={form.district}
+                        options={DistrictsList}
+                        onChange={handleChangeField.bind(null, 'district')}
+                        error={errors.district}
                     />
-                    {errors.phoneNumber && (
-                        <p className="mt-2 text-sm text-red-600 dark:text-red-400">{errors.phoneNumber}</p>
-                    )}
+                </div>
+
+                <div className='mb-2'>
+                    <Select label='City' value={form.city || ''}
+                        options={CitiesList(form.district)}
+                        onChange={handleChangeField.bind(null, 'city')}
+                        error={errors.city}
+                    />
+                </div>
+                <div>
+                    <Input id='' label='Address'
+                        placeholder='Address'
+                        value={form.address || ''}
+                        error={errors.address}
+                        onChange={handleChangeField.bind(null, 'address')} />
                 </div>
 
                 <div>
-                    <label htmlFor="address" className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-                        Address
-                    </label>
-                    <textarea
-                        id="address"
-                        name="address"
-                        required
-                        value={form.address}
-                        onChange={handleChange}
-                        rows={3}
-                        className={inputClassName(errors.address)}
-                    />
-                    {errors.address && (
-                        <p className="mt-2 text-sm text-red-600 dark:text-red-400">{errors.address}</p>
-                    )}
+                    <Input id=''
+                        placeholder='Password'
+                        type='password'
+                        label='Password' value={form.password || ''}
+                        error={errors.password}
+                        onChange={handleChangeField.bind(null, 'password')} />
                 </div>
 
                 <div>
-                    <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-                        Password
-                    </label>
-                    <input
-                        id="password"
-                        name="password"
-                        type="password"
-                        required
-                        value={form.password}
-                        onChange={handleChange}
-                        className={inputClassName(errors.password)}
-                    />
-                    {errors.password && (
-                        <p className="mt-2 text-sm text-red-600 dark:text-red-400">{errors.password}</p>
-                    )}
-                </div>
-
-                <div>
-                    <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-                        Confirm Password
-                    </label>
-                    <input
-                        id="confirmPassword"
-                        name="confirmPassword"
-                        type="password"
-                        required
-                        value={form.confirmPassword}
-                        onChange={handleChange}
-                        className={inputClassName(errors.confirmPassword)}
-                    />
-                    {errors.confirmPassword && (
-                        <p className="mt-2 text-sm text-red-600 dark:text-red-400">{errors.confirmPassword}</p>
-                    )}
+                    <Input id=''
+                        type='password'
+                        placeholder='Confirm Password'
+                        label='Confirm Password' value={form.confirmPassword || ''}
+                        error={errors.confirmPassword}
+                        onChange={handleChangeField.bind(null, 'confirmPassword')} />
                 </div>
 
                 <div>
@@ -347,6 +248,6 @@ export default function RegisterPage() {
                     </span>
                 </div>
             </form>
-        </AuthLayout>
+        </AuthLayout >
     );
 }

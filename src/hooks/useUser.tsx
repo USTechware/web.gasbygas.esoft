@@ -8,7 +8,7 @@ const useUser = () => {
     return {
         user,
         isLoggedIn: isLoggedIn,
-        isDistributor: user?.userRole === UserRole.DISTRIBUTOR,
+        isAdmin: user?.userRole === UserRole.ADMIN,
         isOutletManager: user?.userRole === UserRole.OUTLET_MANAGER,
         isCustomer: user?.userRole === UserRole.CUSTOMER,
         isBusiness: user?.userRole === UserRole.BUSINESS,

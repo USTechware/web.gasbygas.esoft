@@ -65,7 +65,7 @@ export const requests = {
       try {
         const { status, data } = await client.put('/api/v1/requests/issue', payload);
         if (status === HTTP_STATUS.CREATED) {
-          dispatch.requests.updateRequestStatus(payload._id, RequestStatus.COMPLETED)
+          dispatch.requests.updateRequestStatus(payload._id, RequestStatus.DELIVERED)
           return data;
         }
       } catch (error) {
@@ -76,7 +76,7 @@ export const requests = {
       try {
         const { status, data } = await client.put('/api/v1/requests/cancel', payload);
         if (status === HTTP_STATUS.CREATED) {
-          dispatch.requests.updateRequestStatus(payload._id, RequestStatus.COMPLETED)
+          dispatch.requests.updateRequestStatus(payload._id, RequestStatus.CANCELLED)
           return data;
         }
       } catch (error) {

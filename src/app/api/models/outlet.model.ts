@@ -1,8 +1,17 @@
+import { GasTypes } from "@/constants/common";
 import mongoose, { Schema, Document } from "mongoose";
 
 interface IStockHistory{
-    dateAdded: string;
+    dateAdded: Date;
     quantity: number;
+    type: GasTypes;
+}
+
+interface ICurrentStock{
+    [GasTypes.TWO_KG]: number;
+    [GasTypes.FIVE_KG]: number;
+    [GasTypes.TWELVE_HALF_KG]: number;
+    [GasTypes.SIXTEEN_KG]: number;
 }
 
 export interface IOutlet extends Document {
@@ -13,7 +22,7 @@ export interface IOutlet extends Document {
     managerName: string;
     managerEmail: string;
     managerPhoneNumber: string;
-    currentStock: number;
+    currentStock: ICurrentStock;
     stockHistory: IStockHistory[]
 }
 
@@ -26,7 +35,7 @@ const outletSchema = new Schema<IOutlet>(
         managerName: { type: String, required: true, trim: true },
         managerEmail: { type: String, required: true, unique: true, trim: true },
         managerPhoneNumber: { type: String, required: true, trim: true },
-        currentStock: { type: Number, required: true, trim: true },
+        currentStock: { type: Schema.Types.Mixed, required: true},
         stockHistory: { type: Schema.Types.Mixed, required: true, trim: true },
     },
     { timestamps: true }

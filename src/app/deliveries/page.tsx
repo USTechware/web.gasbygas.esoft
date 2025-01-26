@@ -15,12 +15,18 @@ import { UserRole } from '../api/types/user';
 import StatusLabel from '@/components/status';
 import AuthRoleCheck from '@/components/Auth';
 import { DeliveryStatus } from '../api/types/deliveries';
+import useUser from '@/hooks/useUser';
+import { GasTypes, GasTypesValues } from '@/constants/common';
+import { IRequestItem } from '../api/models/deliveries.model';
+import TimelineView from '@/components/Timeline';
+
 
 function Deliveries() {
     const dispatch = useDispatch<Dispatch>();
-    const user = useSelector((state: RootState) => state.auth.user);
+    const { user, isOutletManager, isAdmin } = useUser();
     const deliveries = useSelector((state: RootState) => state.deliveries.list);
-    const outlets = useSelector((state: RootState) => state.outlets.list);
+
+    const [currentDelivery, setCurrentDelivery] = useState<{ id: string, item: any, action: 'timeline' } | null>(null)
 
     useEffect(() => {
         dispatch.outlets.fetchOutlets();
@@ -30,22 +36,26 @@ function Deliveries() {
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
     const [isPopupOpen, setIsPopupOpen] = useState(false);
-    const [formData, setFormData] = useState({
-        outlet: '',
-        quantity: 0,
-        dateOfDelivery: moment().format('YYYY-MM-DD')
-    });
 
-    const [formErrors, setFormErrors] = useState({
-        outlet: '',
-        quantity: '',
-        dateOfDelivery: ''
+    const [item, setItem] = useState<IRequestItem>({
+        type: GasTypes.TWO_KG,
+        quantity: 1
+    })
+
+    const [formData, setFormData] = useState<{ items: IRequestItem[] }>({
+        items: []
     });
 
     const columns = [
         { key: 'outlet', label: 'Outlet', render: (delivery: any) => `${delivery.outlet.name}/${delivery.outlet.district}` },
-        { key: 'quantity', label: 'Quantity' },
-        { key: 'dateOfDelivery', label: 'Delivery Date', render: (delivery: any) => moment(delivery.dateOfDelivery).format('YYYY-MM-DD') },
+        {
+            key: 'order', label: 'Order Items', render: ((delivery: any) => {
+                return delivery.items.map((d: any) => (
+                    <div key={d.type}>{(GasTypesValues as any)[d.type]}: {d.quantity}</div>
+                ))
+            })
+        },
+        { key: 'lastUpdatedAt', label: 'Last Updated At', render: (delivery: any) => moment(delivery.updatedAt).format('YYYY-MM-DD HH:MM') },
         { key: 'status', label: 'Status', render: (request: any) => <StatusLabel status={request.status} /> }
     ];
 
@@ -54,50 +64,27 @@ function Deliveries() {
     };
 
     const handleClosePopup = () => {
-        setFormData({
-            outlet: '',
-            quantity: 0,
-            dateOfDelivery: ''
-        });
-        setFormErrors({
-            outlet: '',
-            quantity: '',
-            dateOfDelivery: ''
+        setItem({
+            quantity: 1,
+            type: GasTypes.TWO_KG
         });
         setIsPopupOpen(false);
     };
 
     const handleChangeField = (field: string, val: any) => {
-        setFormData(prev => ({
+        setItem(prev => ({
             ...prev,
-            [field]: field === 'quantity' ? parseInt(val):  val,
+            [field]: field === 'quantity' ? parseInt(val) : val,
         }));
     };
 
     const validateForm = () => {
-        const errors = {
-            outlet: '',
-            quantity: '',
-            dateOfDelivery: ''
-        };
         let isValid = true;
 
-        if (!formData.outlet) {
-            errors.outlet = 'Outlet is required';
+        if (!formData.items?.length) {
             isValid = false;
         }
 
-        if (!formData.quantity) {
-            errors.quantity = 'Quantity is required';
-            isValid = false;
-        }
-
-        if (!formData.dateOfDelivery) {
-            errors.dateOfDelivery = 'Delivery date is required';
-            isValid = false;
-        }
-
-        setFormErrors(errors);
         return isValid;
     };
 
@@ -106,7 +93,7 @@ function Deliveries() {
 
         setIsLoading(true);
         try {
-            const data = await dispatch.deliveries.createDelivery(formData);
+            const data = await dispatch.deliveries.createDelivery({ items: formData.items });
             toast.success(data?.message || "Delivery has been scheduled successfully");
             dispatch.deliveries.fetchDeliveries();
             handleClosePopup();
@@ -119,10 +106,10 @@ function Deliveries() {
     };
 
 
-    const handleConfirmDelivery = async (item: any) => {
+    const handleUpdateStatus = async (status: DeliveryStatus, item: any) => {
         try {
-            const data = await dispatch.deliveries.confirmDelivery({ _id: item._id });
-            toast.success(data?.message || "Delivery has been confirmed recieved successfully");
+            const data = await dispatch.deliveries.confirmDelivery({ _id: item._id, status });
+            toast.success(data?.message || "Delivery has been updated successfully");
             dispatch.deliveries.fetchDeliveries();
             handleClosePopup();
         } catch (error: any) {
@@ -130,66 +117,119 @@ function Deliveries() {
             console.log('Create delivery failed:', error);
         }
     }
+
+    const handleViewTimeline = async (item: any) => {
+        setCurrentDelivery({ id: item._id, item, action: 'timeline' })
+    }
+
     const actions = useMemo(() => {
-        if (user?.userRole === UserRole.OUTLET_MANAGER) {
+        if (isAdmin) {
             return [
-                { label: 'Confirm Delivery', onClick: handleConfirmDelivery, condition: (item: any) => item.status === DeliveryStatus.PENDING },
+                { label: 'Confirm', onClick: handleUpdateStatus.bind(null, DeliveryStatus.CONFIRMED), condition: (item: any) => item.status === DeliveryStatus.PLACED },
+                { label: 'Make Ready', onClick: handleUpdateStatus.bind(null, DeliveryStatus.READY), condition: (item: any) => item.status === DeliveryStatus.CONFIRMED },
+                { label: 'Dispatch', onClick: handleUpdateStatus.bind(null, DeliveryStatus.DISPATCHED), condition: (item: any) => item.status === DeliveryStatus.READY },
+                { label: 'Cancel', onClick: handleUpdateStatus.bind(null, DeliveryStatus.CANCELLED), condition: (item: any) => item.status === DeliveryStatus.PLACED },
+                { label: 'View Timeline', onClick: handleViewTimeline },
             ]
-        }else {
+        } else if (isOutletManager) {
+            return [
+                { label: 'Confirm Arrival', onClick: handleUpdateStatus.bind(null, DeliveryStatus.ARRIVED), condition: (item: any) => item.status === DeliveryStatus.DISPATCHED },
+                { label: 'Cancel', onClick: handleUpdateStatus.bind(null, DeliveryStatus.CANCELLED), condition: (item: any) => item.status === DeliveryStatus.PLACED },
+                { label: 'View Timeline', onClick: handleViewTimeline },
+            ]
+        } else {
             return []
         }
     }, [user])
 
+    const onAddItem = () => {
+        if (item && item.type && item.quantity) {
+            setFormData((prev) => {
+                const existingItemIndex = (prev.items || []).findIndex((i) => i.type === item.type);
+
+                if (existingItemIndex !== -1) {
+                    return {
+                        ...prev,
+                        items: prev.items.map((i, index) =>
+                            index === existingItemIndex
+                                ? { ...i, quantity: item.quantity }
+                                : i
+                        ),
+                    };
+                } else {
+                    return {
+                        ...prev,
+                        items: [...(prev.items || []), item],
+                    };
+                }
+            });
+        }
+    };
+    const onRemoveItem = (type: GasTypes) => {
+        setFormData((prev) => ({
+            ...prev,
+            items: prev.items.filter((item) => item.type !== type),
+        }));
+    };
     return (
         <AppLayout>
             <div className="min-h-screen bg-gray-100 dark:bg-gray-800 p-4">
-                <h1 className="text-2xl font-bold mb-4 text-gray-700 dark:text-gray-200">Deliveries</h1>
+                <h1 className="text-2xl font-bold mb-4 text-gray-700 dark:text-gray-200">Delivery Requests</h1>
 
-                {/* Schedule Delivery Button */}
-                {user?.userRole === UserRole.DISTRIBUTOR &&
+                {/* Request Delivery Button */}
+                {isOutletManager &&
                     <div className='my-2'>
                         <Button
-                            text='Schedule Delivery'
+                            text='Request Delivery'
                             onClick={handleOpenPopup}
                         />
                     </div>
                 }
 
                 {/* Deliveries Table */}
-                <Table columns={columns} data={deliveries} actions={actions}/>
+                <Table columns={columns} data={deliveries} actions={actions} />
 
                 <Modal isOpen={isPopupOpen} onClose={handleClosePopup}>
-                    <Modal.Header>Schedule Delivery</Modal.Header>
+                    <Modal.Header>Request Delivery</Modal.Header>
                     <Modal.Content>
-                        <div className='mb-2'>
+                        <div className="mb-2 flex gap-2 justify-between items-end">
                             <Select
-                                label='Outlet'
-                                value={formData.outlet}
-                                options={outlets.map((outlet) => ({ value: String(outlet._id), label: `${outlet.name} (${outlet.district})`}))}
-                                onChange={handleChangeField.bind(null, 'outlet')}
-                                error={formErrors.outlet}
-                            />
-                        </div>
+                                options={Object.keys(GasTypes).map((key: string) => ({ label: (GasTypesValues as any)[key], value: key }))}
+                                value={item.type} label='Type' onChange={handleChangeField.bind(null, 'type')} />
 
-                        <div className='mb-2'>
                             <Input
                                 label='Quantity'
                                 type='number'
                                 min={0}
-                                value={formData.quantity}
+                                value={item.quantity}
                                 onChange={handleChangeField.bind(null, 'quantity')}
-                                error={formErrors.quantity}
                             />
+                            <Button onClick={onAddItem} className='h-[40px]' text='Add' />
                         </div>
 
-                        <div className='mb-2'>
-                            <Input
-                                label='Date of Delivery'
-                                value={formData.dateOfDelivery}
-                                type='date'
-                                onChange={handleChangeField.bind(null, 'dateOfDelivery')}
-                                error={formErrors.dateOfDelivery}
-                            />
+                        <div className="max-w-md bg-white/2 shadow-lg rounded-md">
+                            {formData.items?.length ? (
+                                <div className="space-y-2">
+                                    {formData.items.map((item) => (
+                                        <div
+                                            key={item.type}
+                                            className="flex items-center justify-between p-2 border rounded-lg bg-gray-50 hover:bg-gray-100"
+                                        >
+                                            <div>
+                                                <div className="font-medium text-gray-700">{(GasTypesValues as any)[item.type]}</div>
+                                                <div className="text-sm text-gray-500">Quantity: {item.quantity}</div>
+                                            </div>
+                                            <Button
+                                                text=' Remove'
+                                                className="bg-red-500 hover:bg-red-600 rounded-lg shadow-sm"
+                                                onClick={onRemoveItem.bind(null, item.type)}
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-gray-500 text-center mt-4 pb-2">Please add request items.</div>
+                            )}
                         </div>
                     </Modal.Content>
                     <Modal.Footer>
@@ -207,9 +247,13 @@ function Deliveries() {
                         </div>
                     </Modal.Footer>
                 </Modal>
+
+                {
+                    currentDelivery && currentDelivery.action === 'timeline' && <TimelineView events={currentDelivery.item.timelines} onClose={() => setCurrentDelivery(null)} />
+                }
             </div>
         </AppLayout>
     );
 }
 
-export default AuthRoleCheck(Deliveries, { roles: [UserRole.DISTRIBUTOR, UserRole.OUTLET_MANAGER]})
+export default AuthRoleCheck(Deliveries, { roles: [UserRole.ADMIN, UserRole.OUTLET_MANAGER] })

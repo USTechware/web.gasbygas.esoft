@@ -4,7 +4,7 @@ import DatabaseService from "@/app/api/utils/db";
 import Delivery, { IDelivery } from "@/app/api/models/deliveries.model";
 import Outlet, { IOutlet } from "@/app/api/models/outlet.model";
 import Request, { IRequest } from "@/app/api/models/request.model";
-import { HTTP_STATUS } from "@/constants/common";
+import { GasTypes, HTTP_STATUS } from "@/constants/common";
 import { NextResponse } from "next/server";
 import { AuthGuard } from "../../middleware/authenticator";
 import { CreateRequestDTO } from "../../dto/requests.dto";
@@ -15,6 +15,7 @@ import User, { IUser } from "../../models/user.model";
 import { UserRole } from "../../types/user";
 import { FilterQuery } from "mongoose";
 import EmailService from "../../lib/EmailService.lib";
+import { DeliveryStatus } from "../../types/deliveries";
 
 class RequestsController {
 
@@ -44,14 +45,14 @@ class RequestsController {
             query.user = userId
         } else if ([UserRole.OUTLET_MANAGER].includes(user.userRole)) {
             query.outlet = user.outlet
-        } else if (user.userRole === UserRole.DISTRIBUTOR) {
+        } else if (user.userRole === UserRole.ADMIN) {
             query = {}
         }
 
 
         const requests = await Request.find(query).populate('outlet', {
             name: 1, district: 1, city: 1
-        }).populate('user', { firstName: 1, lastName: 1 , email: 1});
+        }).populate('user', { firstName: 1, lastName: 1, email: 1 });
 
         return NextResponse.json(
             requests,
@@ -78,7 +79,8 @@ class RequestsController {
 
         const payload: CreateRequestDTO = (req as any).payload;
 
-        const customerId = payload.customerId ?? userId;
+        const customerId = user.userRole === UserRole.OUTLET_MANAGER ?
+            payload.customerId ? payload.customerId : undefined : userId;
         const outletId = payload.outlet ?? user.outlet;
 
         const customer = await User.findById(customerId)
@@ -93,15 +95,15 @@ class RequestsController {
         }
 
         // Current Stock
-        let availableStock = outletExists.currentStock;
+        let availableStock = (outletExists.currentStock as any)[payload.type as any] || 0;
 
-        // Expected Deliveries within next 2 weeks
+        // Pending Deliveries for the outlet
         const upcomingDeliveries = (await Delivery.find({
             outlet: outletId,
-            dateOfDelivery: {
-                $lte: moment().add(2, 'weeks')
+            status: {
+                $nin: [DeliveryStatus.CANCELLED, DeliveryStatus.ARRIVED]
             }
-        }) || []).reduce((c, delievery: IDelivery) => c += delievery.quantity, 0)
+        }) || []).reduce((c, delivery: any) => c += delivery?.items?.find((i: any) => i.type === payload.type)?.quantity || 0, 0)
 
         if (upcomingDeliveries) {
             availableStock += upcomingDeliveries
@@ -110,10 +112,8 @@ class RequestsController {
         // Current Requests
         const currentRequests = (await Request.find({
             outlet: outletId,
-            deadlineForPickup: {
-                $lte: moment().add(2, 'weeks')
-            },
-            status: RequestStatus.PENDING
+            type: payload.type,
+            status: RequestStatus.PLACED
         }) || []).reduce((c, request: IRequest) => c += request.quantity, 0)
 
         if (currentRequests > 0) {
@@ -135,21 +135,36 @@ class RequestsController {
         const newRequest = await Request.create({
             outlet: outletId,
             user: customerId,
+            customerName: !customerId ? payload.customerName : undefined,
+            customerEmail: !customerId ? payload.customerEmail : undefined,
+            customerPhoneNumber: !customerId ? payload.customerPhoneNumber : undefined,
+            customerAddress: !customerId ? payload.customerAddress : undefined,
             token,
             quantity: payload.quantity,
             deadlineForPickup,
-            status: RequestStatus.PENDING
+            timelines: [
+                {
+                    date: moment().toISOString(),
+                    status: RequestStatus.PLACED
+                }
+            ],
+            status: RequestStatus.PLACED
         });
 
+        const customerEmail = customer ? customer.email : payload.customerEmail;
+        const customerName = customer ? customer.firstName : payload.customerName;
 
-        // Send Email
-        await EmailService.notifyNewRequest(
-            customer.firstName,
-            customer.email,
-            token,
-            deadlineForPickup,
-            payload.quantity
-        )
+        if (customerEmail) {
+            // Send Email
+            await EmailService.notifyNewRequest(
+                customerName || 'User',
+                customerEmail,
+                token,
+                deadlineForPickup,
+                payload.quantity
+            )
+        }
+
 
         return NextResponse.json(
             {

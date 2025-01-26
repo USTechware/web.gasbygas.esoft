@@ -14,7 +14,8 @@ class LoginController {
         await DatabaseService.connect();
 
         // Find the user by email
-        const user = await User.findOne({ email: payload.email });
+        const user = await User.findOne({ email: payload.email })
+            .populate('outlet', { name: 1, _id: 0});
         if (!user) {
             return NextResponse.json(
                 { message: "User not found" },

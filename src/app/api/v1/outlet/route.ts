@@ -1,21 +1,41 @@
 import { CreateOutletDTO } from "@/app/api/dto/outlet.dto";
 import { ValidateBody } from "@/app/api/middleware/validator";
 import DatabaseService from "@/app/api/utils/db";
-import Outlet from "@/app/api/models/outlet.model";
-import User from "@/app/api/models/user.model";
-import { HTTP_STATUS } from "@/constants/common";
+import Outlet, { IOutlet } from "@/app/api/models/outlet.model";
+import User, { IUser } from "@/app/api/models/user.model";
+import { GasTypes, HTTP_STATUS } from "@/constants/common";
 import { NextResponse } from "next/server";
 import AuthProvider from "@/app/api/utils/auth";
 import { AuthGuard } from "../../middleware/authenticator";
 import EmailService from "../../lib/EmailService.lib";
+import { FilterQuery } from "mongoose";
+import { UserRole } from "../../types/user";
 
 class OutletController {
     @AuthGuard()
     async GET(req: Request) {
-
         await DatabaseService.connect();
 
-        const outlets = await Outlet.find({}).sort({
+        const userId = (req as any).userId;
+
+        const user: IUser | null = await User.findById(userId);
+
+        if (!user) {
+            return NextResponse.json(
+                {
+                    message: "User not found",
+                },
+                { status: HTTP_STATUS.UNAUTHORIZED }
+            );
+        }
+
+        const query : FilterQuery<IOutlet> = {}
+       
+        if (user && [UserRole.CUSTOMER, UserRole.BUSINESS].includes(user.userRole)) {
+            query.district = user.district
+        }
+
+        const outlets = await Outlet.find(query).sort({
             createdAt: -1
         });
 
@@ -64,7 +84,12 @@ class OutletController {
             managerName: payload.managerName,
             managerEmail: payload.managerEmail,
             managerPhoneNumber: payload.managerPhoneNumber,
-            currentStock: 0,
+            currentStock: {
+                [GasTypes.TWO_KG]: 0,
+                [GasTypes.FIVE_KG]: 0,
+                [GasTypes.TWELVE_HALF_KG]: 0,
+                [GasTypes.SIXTEEN_KG]: 0,
+            },
             stockHistory: []
         });
 
@@ -79,6 +104,7 @@ class OutletController {
 
         // Generate a temporary password for the manager
         const tempPassword = AuthProvider.generateTempPassword();
+        console.log('Temporary Password', tempPassword)
 
         // Create a new user for the outlet manager
         await User.create({

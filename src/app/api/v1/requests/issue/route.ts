@@ -54,7 +54,11 @@ class RequestsController {
         }
 
         // Mark status as completed
-        request.status = RequestStatus.COMPLETED;
+        request.status = RequestStatus.DELIVERED;
+        request.timelines.push({
+            date: moment().toISOString(),
+            status: RequestStatus.DELIVERED
+        })
         await request.save();
 
         // Reduce from Outlet Stocks

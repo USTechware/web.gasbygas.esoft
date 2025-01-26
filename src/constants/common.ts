@@ -17,3 +17,18 @@ export const HTTP_STATUS = {
     SERVICE_UNAVAILABLE: 503,
     GATEWAY_TIMEOUT: 504,
 };
+
+
+export enum GasTypes {
+    TWO_KG = 'TWO_KG',
+    FIVE_KG = 'FIVE_KG',
+    TWELVE_HALF_KG = 'TWELVE_HALF_KG',
+    SIXTEEN_KG = 'SIXTEEN_KG',
+}
+
+export const GasTypesValues = {
+    TWO_KG: '2 Kg',
+    FIVE_KG: '5 Kg',
+    TWELVE_HALF_KG: '12.5 Kg',
+    SIXTEEN_KG: '16 Kg',
+}

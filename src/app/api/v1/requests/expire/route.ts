@@ -8,6 +8,7 @@ import { AuthGuard } from "../../../middleware/authenticator";
 import { UpdateRequestStatusDTO } from "../../../dto/requests.dto";
 import { RequestStatus } from "../../../types/requests";
 import User from "../../../models/user.model";
+import moment from "moment";
 
 class RequestsController {
 
@@ -42,6 +43,10 @@ class RequestsController {
 
 
         request.status = RequestStatus.EXPIRED;
+        request.timelines.push({
+            date: moment().toISOString(),
+            status: RequestStatus.EXPIRED
+        })
         await request.save();
 
         return NextResponse.json(

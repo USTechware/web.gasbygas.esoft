@@ -5,13 +5,7 @@ import axios, { AxiosInstance } from 'axios';
 const API_URL = '/';
 
 const createClient = (): AxiosInstance => {
-  let token = null;
-  if (isBrowser()) {
-    token = localStorage.getItem('token');
-  }
-
   const headers = {
-    Authorization: token ? `Bearer ${token}` : '',
     'Content-Type': 'application/json',
   };
 
@@ -19,6 +13,17 @@ const createClient = (): AxiosInstance => {
     baseURL: API_URL,
     headers,
   });
+
+  client.interceptors.request.use((config) => {
+    let token = null;
+    if (isBrowser()) {
+      token = localStorage.getItem('token');
+    }
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`
+    }
+    return config
+  })
 
   client.interceptors.response.use(
     (response) => response,

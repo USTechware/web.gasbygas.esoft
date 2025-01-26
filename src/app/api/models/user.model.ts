@@ -10,6 +10,8 @@ export interface IUser {
     nationalIdNumber?: string;
     businessRegId?: string;
     phoneNumber: string;
+    district: string;
+    city: string;
     address: string;
     password: string;
     outlet?: string;
@@ -28,6 +30,8 @@ const userSchema = new mongoose.Schema<IUser>(
         nationalIdNumber: { type: String, required: false },
         businessRegId: { type: String, required: false },
         phoneNumber: { type: String, required: false },
+        district: { type: String, required: false },
+        city: { type: String, required: false },
         address: { type: String, required: false },
         requestChangePassword: { type: Boolean, required: false },
         outlet: {

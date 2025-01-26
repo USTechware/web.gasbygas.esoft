@@ -1,23 +1,51 @@
 import mongoose, { Schema, Document, Types } from "mongoose";
 import { DeliveryStatus } from "../types/deliveries";
+import { GasTypes } from "@/constants/common";
+
+export interface IRequestItem {
+    type: GasTypes;
+    quantity: number
+}
+
+export interface ITimeline {
+    date: string;
+    status: DeliveryStatus;
+}
 
 export interface IDelivery extends Document {
     outlet: Types.ObjectId;
-    quantity: number;
-    dateOfDelivery: Date;
+    items: IRequestItem[];
     status: DeliveryStatus;
+    timelines: ITimeline[]
 }
 
 const deliverySchema = new Schema<IDelivery>(
     {
         outlet: { type: Schema.Types.ObjectId, required: true, ref: "Outlet" },
-        quantity: { type: Number, required: true },
-        dateOfDelivery: { type: Date, required: true },
+        items: {
+            type: [{
+                type: { type: String, enum: Object.values(GasTypes), required: true },
+                quantity: { type: Number, required: true }
+            }],
+            required: true
+        },
+        timelines: {
+            type: [
+                {
+                    date: { type: String },
+                    status: {
+                        type: String,
+                        required: true,
+                        enum: Object.keys(DeliveryStatus)
+                    }
+                }
+            ]
+        },
         status: {
             type: String,
             required: true,
             enum: Object.keys(DeliveryStatus),
-            default: DeliveryStatus.PENDING
+            default: DeliveryStatus.PLACED
         }
     },
     { timestamps: true }

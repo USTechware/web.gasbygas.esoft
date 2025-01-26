@@ -4,6 +4,7 @@ import Logo from '../logo';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/data';
 import { UserRole } from '@/app/api/types/user';
+import useUser from '@/hooks/useUser';
 
 interface NavItem {
     name: string;
@@ -21,42 +22,34 @@ export default function Sidebar() {
         { name: 'Tasks', href: '/tasks', icon: <Menu className="w-6 h-6" /> }
     ]);
 
-    const user = useSelector((state: RootState) => state.auth.user);
+    const { isAdmin, isOutletManager } = useUser();
 
     useEffect(() => {
         let menu: NavItem[] = [
             { name: 'Dashboard', href: '/dashboard', icon: <LayoutDashboardIcon className="w-6 h-6" /> },
         ]
-        if (user) {
-            switch (user.userRole) {
-                case UserRole.DISTRIBUTOR:
-                    menu.push(
-                        { name: 'Outlets', href: '/outlets', icon: <Building className="w-6 h-6" /> },
-                        { name: 'Inventory', href: '/inventory', icon: <CalculatorIcon className="w-6 h-6" /> },
-                        { name: 'Deliveries', href: '/deliveries', icon: <TrainIcon className="w-6 h-6" /> },
-                    )
-                    break;
-                case UserRole.OUTLET_MANAGER:
-                    menu.push(
-                        { name: 'Requests', href: '/requests', icon: <ListChecks className="w-6 h-6" /> },
-                        { name: 'Deliveries', href: '/deliveries', icon: <TrainIcon className="w-6 h-6" /> },
-                        { name: 'Stocks', href: '/stocks', icon: <BookCheck className="w-6 h-6" /> },
-                    )
-                    break;
-                case UserRole.CUSTOMER:
-                case UserRole.BUSINESS:
-                    menu.push(
-                        { name: 'Requests', href: '/requests', icon: <ListChecks className="w-6 h-6" /> }
-                    )
-                    break;
-                default:
-                    break
-            }
+
+        if (isAdmin) {
+            menu.push(
+                { name: 'Outlets', href: '/outlets', icon: <Building className="w-6 h-6" /> },
+                { name: 'Inventory', href: '/inventory', icon: <CalculatorIcon className="w-6 h-6" /> },
+                { name: 'Deliveries', href: '/deliveries', icon: <TrainIcon className="w-6 h-6" /> },
+            )
+        } else if (isOutletManager) {
+            menu.push(
+                { name: 'Requests', href: '/requests', icon: <ListChecks className="w-6 h-6" /> },
+                { name: 'Deliveries', href: '/deliveries', icon: <TrainIcon className="w-6 h-6" /> },
+                { name: 'Stocks', href: '/stocks', icon: <BookCheck className="w-6 h-6" /> },
+            )
+        } else {
+            menu.push(
+                { name: 'Requests', href: '/requests', icon: <ListChecks className="w-6 h-6" /> }
+            )
         }
 
-        setNavigation(menu)
+        setNavigation([...menu])
 
-    }, [user])
+    }, [isAdmin, isOutletManager])
 
     const [collapsed, setCollapsed] = useState(false);
 

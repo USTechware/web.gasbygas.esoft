@@ -1,5 +1,8 @@
 export enum DeliveryStatus {
-    PENDING = "PENDING",
-    DELIVERED = "DELIVERED",
+    PLACED = "PLACED",
+    CONFIRMED = "CONFIRMED",
+    READY = "READY",
+    DISPATCHED = "DISPATCHED",
+    ARRIVED = "ARRIVED",
     CANCELLED = "CANCELLED"
 }

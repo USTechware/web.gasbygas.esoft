@@ -1,18 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
 import AppLayout from '@/components/layouts/AppLayout';
 import DashboardWidget from '@/components/widget';
 import { Building2Icon, CalculatorIcon, CogIcon, ShipIcon, ShoppingCart } from 'lucide-react';
-import Button from '@/components/subcomponents/button';
-import { useDispatch, useSelector } from 'react-redux';
-import { Dispatch, RootState } from '@/data';
 import useUser from '@/hooks/useUser';
 import useDashboard from '@/hooks/useDashboard';
 
 export default function Dashboard() {
-    const { user, isDistributor, isOutletManager, isCustomer, isBusiness } = useUser();
+    const { user, isAdmin, isOutletManager, isCustomer, isBusiness } = useUser();
     const data = useDashboard();
     
     return (
@@ -29,7 +24,7 @@ export default function Dashboard() {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {
-                                    isDistributor &&
+                                    isAdmin &&
                                     <>
                                         <DashboardWidget icon={<Building2Icon />} title='Outlets' path='/outlets' children={data.outlets} />
                                         <DashboardWidget icon={<CalculatorIcon />} title='Inventry' path='/inventory' children={data.inventory} />

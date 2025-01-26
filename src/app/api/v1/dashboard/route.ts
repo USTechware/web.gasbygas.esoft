@@ -29,14 +29,14 @@ class Controller {
         let data: any = {};
 
         switch (user.userRole) {
-            case UserRole.DISTRIBUTOR:
-                const inventoryCount = (await Inventory.findOne().select({ currentStock: 1 })).currentStock;
+            case UserRole.ADMIN:
+                const inventoryCount = (await Inventory.findOne().select({ currentStock: 1 }))?.currentStock || {};
                 const outletsCount = await Outlet.countDocuments();
                 const requestsCount = await Request.countDocuments();
                 const deliveriesCount = await Delivery.countDocuments();
 
                 data = {
-                    inventory: inventoryCount,
+                    inventory: Object.values(inventoryCount as Record<string, number>).reduce((c, i) => c += i, 0),
                     outlets: outletsCount,
                     requests: requestsCount,
                     deliveries: deliveriesCount,
@@ -44,11 +44,13 @@ class Controller {
                 break;
 
             case UserRole.OUTLET_MANAGER:
-                const stockCount = (await Outlet.findById(user.outlet)).currentStock;
+                const currentStock = (await Outlet.findById(user.outlet))?.currentStock || {};
+                const stockCount = Object.values(currentStock as Record<string, number>).reduce((a: number, i: number) => a + i, 0)
                 const outletRequestsCount = await Request.countDocuments({
                     outlet: user.outlet, status: {
-                    $nin: [RequestStatus.CANCELLED]
-                } });
+                        $nin: [RequestStatus.CANCELLED]
+                    }
+                });
                 const outletDeliveriesCount = await Delivery.countDocuments({ outlet: user.outlet });
 
                 data = {

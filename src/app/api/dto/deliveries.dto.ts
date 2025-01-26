@@ -1,18 +1,23 @@
-import { IsNotEmpty, IsNumber, IsEnum, IsMongoId, IsOptional } from "class-validator";
+import { IsNotEmpty, IsNumber, IsEnum, IsMongoId, IsOptional, ArrayMinSize, ValidateNested } from "class-validator";
 import { DeliveryStatus } from "../types/deliveries";
+import { GasTypes } from "@/constants/common";
+import { Type } from "class-transformer";
 
-// DTO for creating a delivery
-export class CreateDeliveryDTO {
-    @IsNotEmpty({ message: "Outlet ID is required" })
-    @IsMongoId({ message: "Outlet ID must be a valid MongoDB ObjectId" })
-    outlet!: string;
+export class DeliveryItemDTO {
+    @IsNotEmpty({ message: "Item type is required" })
+    @IsEnum(GasTypes, { message: `Type must be one of: ${Object.keys(GasTypes).join(", ")}` })
+    type!: string;
 
-    @IsNotEmpty({ message: "Quantity is required" })
-    @IsNumber({}, { message: "Quantity must be a number" })
+    @IsNotEmpty({ message: "Item quantity is required" })
+    @IsNumber({}, { message: "Item quantity must be a number" })
     quantity!: number;
+}
 
-    @IsNotEmpty({ message: "Date of delivery is required" })
-    dateOfDelivery!: string;
+export class CreateDeliveryDTO {
+    @IsNotEmpty({ message: "Items are required" })
+    @ArrayMinSize(1, { message: "At least one item is required" })
+    @ValidateNested({ each: true })
+    items!: DeliveryItemDTO[];
 
     @IsOptional()
     @IsEnum(DeliveryStatus, { message: `Status must be one of: ${Object.values(DeliveryStatus).join(", ")}` })
@@ -24,4 +29,7 @@ export class UpdateDeliveryStatusDTO {
     @IsNotEmpty({ message: "Delivery ID is required" })
     @IsMongoId({ message: "Delivery ID must be a valid MongoDB ObjectId" })
     _id!: string;
+
+    @IsEnum(DeliveryStatus, { message: `Status must be one of: ${Object.values(DeliveryStatus).join(", ")}` })
+    status?: DeliveryStatus;
 }

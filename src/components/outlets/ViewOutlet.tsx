@@ -3,6 +3,7 @@ import Modal from '../modal';
 import Button from '../subcomponents/button';
 import { useDispatch } from 'react-redux';
 import { Dispatch } from '@/data';
+import { GasTypesValues } from '@/constants/common';
 
 function ViewOutlet({ id, onClose }: { id: string; onClose: () => void }) {
     const [outlet, setOutlet] = useState<any>(null);
@@ -84,9 +85,15 @@ function ViewOutlet({ id, onClose }: { id: string; onClose: () => void }) {
                         </div>
                         <div className="flex flex-col mt-4">
                             <div className="font-bold text-md text-gray-400 mb-4">Stocks</div>
-                            <div className="flex justify-between">
+                            <div className="flex flex-col justify-between">
                                 <div className="font-bold">Current Stocks:</div>
-                                <div>{outlet.stocks?.current || 0}</div>
+                                <div className='w-full'>
+                                    {
+                                        Object.entries(outlet.stocks?.current || {}).map((item: any, idx) => (
+                                            <div key={idx} className=' flex justify-between'><span>{(GasTypesValues as any)[item[0]]}</span> <span>{item[1]}</span></div>
+                                        ))
+                                    }
+                                </div>
                             </div>
                         </div>
                     </div>

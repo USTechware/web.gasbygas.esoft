@@ -12,6 +12,8 @@ import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { UserRole } from '../api/types/user';
+import { GasTypes, GasTypesValues } from '@/constants/common';
+import Select from '@/components/subcomponents/select';
 
 function Inventory() {
     const dispatch = useDispatch<Dispatch>();
@@ -24,28 +26,28 @@ function Inventory() {
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
     const [isPopupOpen, setIsPopupOpen] = useState(false);
-    const [formData, setFormData] = useState({ quantity: 0, dateAdded: moment().format('YYYY-MM-YY') });
-    const [formErrors, setFormErrors] = useState({ quantity: '', dateAdded: '' });
+    const [formData, setFormData] = useState({ type: GasTypes.TWO_KG, quantity: 0, dateAdded: moment().format('YYYY-MM-YY') });
+    const [formErrors, setFormErrors] = useState({ type: '', quantity: '', dateAdded: '' });
 
     const handleAddInventory = () => {
         setIsPopupOpen(true);
     };
 
     const handleClosePopup = () => {
-        setFormData({ quantity: 0, dateAdded: '' });
-        setFormErrors({ quantity: '', dateAdded: '' });
+        setFormData({ type: GasTypes.TWO_KG, quantity: 0, dateAdded: moment().format('YYYY-MM-YY') });
+        setFormErrors({ type: '', quantity: '', dateAdded: '' });
         setIsPopupOpen(false);
     };
 
     const handleChangeField = (field: string, val: any) => {
         setFormData(prev => ({
             ...prev,
-            [field]: field === 'quantity' ? parseInt(val):  val,
+            [field]: field === 'quantity' ? parseInt(val) : val,
         }));
     };
 
     const validateForm = () => {
-        const errors = { quantity: '', dateAdded: '' };
+        const errors = { type: GasTypes.TWO_KG, quantity: '', dateAdded: '' };
         let isValid = true;
 
         if (!formData.quantity || isNaN(Number(formData.quantity)) || Number(formData.quantity) <= 0) {
@@ -80,15 +82,16 @@ function Inventory() {
             setIsLoading(false);
         }
 
-        
+
         handleClosePopup();
     };
 
     const columns = [
         { key: 'dateAdded', label: 'Date Added', render: (inv: any) => moment(inv.dateAdded).format('YYYY-MM-DD') },
+        { key: 'type', label: 'Type', render: ({ type: key }: { type: string }) => (GasTypesValues as any)[key] },
         { key: 'quantity', label: 'Quantity' },
     ];
-
+    console.log(Object.entries(currentStock))
     return (
         <AppLayout>
             <div className="min-h-screen bg-gray-100 dark:bg-gray-800 p-4">
@@ -97,7 +100,21 @@ function Inventory() {
                 {/* Current Stock Card */}
                 <div className="bg-blue-100 dark:bg-blue-800 p-6 rounded-lg shadow-md mb-6">
                     <h2 className="text-lg font-bold text-gray-700 dark:text-gray-100">Current Gas Cylinders Stock</h2>
-                    <p className="text-4xl font-extrabold text-blue-700 dark:text-blue-300">{currentStock}</p>
+                    {
+                        !!currentStock &&
+                        <div className="font-extrabold">
+                            <table className='my-2 border-separate border border-gray-400 w-[300px]'>
+                                <tbody>
+                                    {Object.entries(currentStock).map((item, idx) => (
+                                        <tr key={idx}>
+                                            <td className='border border-gray-300'>{(GasTypesValues as any)[item[0]]} Cylinders</td>
+                                            <td className='border border-gray-300 text-center'>{item[1]}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    }
                     <Button
                         text='Add Inventory'
                         onClick={handleAddInventory}
@@ -113,16 +130,18 @@ function Inventory() {
                     <Modal.Header>Add Inventory</Modal.Header>
                     <Modal.Content>
                         <div className="mb-4">
+                            <Select
+                                error={formErrors.type}
+                                options={Object.entries(GasTypes).map((item) => ({ label: item[1], value: item[0] }))}
+                                value={formData.type} label='Type' onChange={handleChangeField.bind(null, 'type')} />
+
+                        </div>
+                        <div className="mb-4">
                             <Input id='' type='number'
                                 error={formErrors.quantity}
                                 min={0}
                                 value={formData.quantity} label='Qunatity' onChange={handleChangeField.bind(null, 'quantity')} />
 
-                        </div>
-                        <div className="mb-4">
-                            <Input id='' type='date'
-                                error={formErrors.dateAdded}
-                                value={formData.dateAdded} label='Date' onChange={handleChangeField.bind(null, 'dateAdded')} />
                         </div>
                     </Modal.Content>
                     <Modal.Footer>
@@ -145,4 +164,4 @@ function Inventory() {
     );
 }
 
-export default AuthRoleCheck(Inventory, { roles: [UserRole.DISTRIBUTOR]})
+export default AuthRoleCheck(Inventory, { roles: [UserRole.ADMIN] })

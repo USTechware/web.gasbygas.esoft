@@ -1,5 +1,7 @@
 import { HTTP_STATUS } from "@/constants/common";
 import client from "../client";
+import { IRequestItem } from "@/app/api/models/deliveries.model";
+import { DeliveryStatus } from "@/app/api/types/deliveries";
 
 interface DeliveryState {
   list: IDelivery[]
@@ -13,7 +15,8 @@ interface IDelivery {
 }
 
 interface IUpdateDelivery {
-  _id?: string
+  _id?: string;
+  status: DeliveryStatus
 }
 
 export const deliveries = {
@@ -36,7 +39,7 @@ export const deliveries = {
         throw error
       }
     },
-    async createDelivery(payload: IDelivery) {
+    async createDelivery(payload: { items: IRequestItem[]}) {
       try {
         const { status, data } = await client.post('/api/v1/deliveries', payload);
         if (status === HTTP_STATUS.CREATED) {
@@ -48,7 +51,7 @@ export const deliveries = {
     },
     async confirmDelivery(payload: IUpdateDelivery) {
       try {
-        const { status, data } = await client.put('/api/v1/deliveries/confirm', payload);
+        const { status, data } = await client.put('/api/v1/deliveries/update-status', payload);
         if (status === HTTP_STATUS.OK) {
           return data;
         }

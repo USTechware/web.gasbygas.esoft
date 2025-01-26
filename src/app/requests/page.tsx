@@ -21,6 +21,9 @@ import AuthRoleCheck from '@/components/Auth';
 import Rescheduler from '@/components/requests/Rescheduler';
 import useUser from '@/hooks/useUser';
 import Transfer from '@/components/requests/Transfer';
+import { GasTypes, GasTypesValues } from '@/constants/common';
+import CheckBox from '@/components/subcomponents/checkbox';
+import TimelineView from '@/components/Timeline';
 
 function Requests() {
     const dispatch = useDispatch<Dispatch>();
@@ -29,6 +32,9 @@ function Requests() {
     const outlets = useSelector((state: RootState) => state.outlets.list);
     const customers = useSelector((state: RootState) => state.outlets.customers);
     const [isLoading, setIsLoading] = useState<boolean>(false);
+
+    const [isExistingCustomer, setIsExistingCustomer] = useState<boolean>(true);
+
     useEffect(() => {
 
         if (isOutletManager) {
@@ -37,7 +43,7 @@ function Requests() {
 
     }, [isOutletManager])
 
-    const [currentRequest, setCurrentRequest] = useState<{ id: string, item: any, action: 'view' | 'sms' | 'rescheduler' | 'transfer' } | null>(null)
+    const [currentRequest, setCurrentRequest] = useState<{ id: string, item: any, action: 'view' | 'sms' | 'timeline' | 'rescheduler' | 'transfer' } | null>(null)
 
     const [filteredRequests, setFilteredRequests] = useState<IRequest[]>([])
     const [searchToken, setSearchToken] = useState<string>('');
@@ -62,21 +68,31 @@ function Requests() {
     const [isPopupOpen, setIsPopupOpen] = useState(false);
     const [formData, setFormData] = useState({
         customerId: null,
+        customerName: '',
+        customerEmail: '',
+        customerPhoneNumber: '',
+        customerAddress: '',
         outlet: '',
+        type: GasTypes.TWO_KG,
         quantity: 0,
     });
 
     const [formErrors, setFormErrors] = useState({
         customerId: '',
+        customerName: '',
+        customerEmail: '',
+        customerPhoneNumber: '',
+        customerAddress: '',
         outlet: '',
+        type: '',
         quantity: '',
     });
 
     const columns = [
         { key: 'token', label: 'Token' },
         { key: 'outlet', label: 'Outlet', render: (request: any) => `${request.outlet.name}` },
+        { key: 'type', label: 'Type', render: (request: any) => (GasTypesValues as any)[request.type] },
         { key: 'quantity', label: 'Quantity' },
-        { key: 'deadlineForPickup', label: 'Deadline(Pickup)', render: (request: any) => moment(request.deadlineForPickup).format('YYYY-MM-DD') },
         {
             key: 'status', label: 'Status', render: (request: any) => <StatusLabel status={request.status} />
         },
@@ -86,7 +102,11 @@ function Requests() {
         columns.splice(
             1,
             1,
-            { key: 'user', label: 'Customer/Business', render: (request: any) => `${request.user.firstName} ${request.user.lastName}` },
+            {
+                key: 'user', label: 'Customer/Business', render: (request: any) =>
+                    request.user ? `${request.user.firstName} ${request.user.lastName}` :
+                        `${request.customerName}/${request.customerEmail}`
+            },
         )
     }
 
@@ -97,12 +117,22 @@ function Requests() {
     const handleClosePopup = () => {
         setFormData({
             customerId: null,
+            customerName: '',
+            customerEmail: '',
+            customerPhoneNumber: '',
+            customerAddress: '',
             outlet: '',
+            type: GasTypes.TWO_KG,
             quantity: 0,
         });
         setFormErrors({
             customerId: '',
+            customerName: '',
+            customerEmail: '',
+            customerPhoneNumber: '',
+            customerAddress: '',
             outlet: '',
+            type: '',
             quantity: '',
         });
         setIsPopupOpen(false);
@@ -118,7 +148,12 @@ function Requests() {
     const validateForm = () => {
         const errors = {
             customerId: '',
+            customerName: '',
+            customerEmail: '',
+            customerPhoneNumber: '',
+            customerAddress: '',
             outlet: '',
+            type: '',
             quantity: '',
         };
         let isValid = true;
@@ -128,7 +163,7 @@ function Requests() {
             isValid = false;
         }
 
-        if (isOutletManager && !formData.customerId) {
+        if (isOutletManager && isExistingCustomer && !formData.customerId) {
             errors.customerId = 'Customer/Business is required';
             isValid = false;
         }
@@ -151,12 +186,22 @@ function Requests() {
         setIsLoading(true);
         try {
             const payload: any = {
+                type: formData.type,
                 quantity: formData.quantity,
                 customerId: undefined,
-                outlet: undefined,
+                outlet: undefined
             }
             if (isOutletManager) {
-                payload.customerId = formData.customerId
+
+
+                if (isExistingCustomer) {
+                    payload.customerId = formData.customerId
+                } else {
+                    payload.customerName = formData.customerName
+                    payload.customerEmail = formData.customerEmail
+                    payload.customerPhoneNumber = formData.customerPhoneNumber
+                    payload.customerAddress = formData.customerAddress
+                }
             } else {
                 payload.outlet = formData.outlet
             }
@@ -226,22 +271,26 @@ function Requests() {
     const handleSendMessage = async (item: any) => {
         setCurrentRequest({ id: item._id, item, action: 'sms' })
     }
-
+    const handleViewTimeline = async (item: any) => {
+        setCurrentRequest({ id: item._id, item, action: 'timeline' })
+    }
 
     const actions = useMemo(() => {
-        if (user?.userRole === UserRole.OUTLET_MANAGER) {
+        if (isOutletManager) {
             return [
-                { label: 'Issue Request', onClick: handleIssueRequest, condition: (item: any) => item.status === RequestStatus.PENDING },
-                { label: 'Expire Request', onClick: handleExpireRequest, condition: (item: any) => item.status === RequestStatus.PENDING },
-                { label: 'Cancel Request', onClick: handleCancelRequest, condition: (item: any) => item.status === RequestStatus.PENDING },
-                { label: 'Reschedule Request', onClick: handleResceduleRequest, condition: (item: any) => item.status === RequestStatus.PENDING },
-                { label: 'Transfer Request', onClick: handleTransferRequest, condition: (item: any) => item.status === RequestStatus.PENDING },
+                { label: 'Issue Request', onClick: handleIssueRequest, condition: (item: any) => ![RequestStatus.DELIVERED, RequestStatus.CANCELLED, RequestStatus.EXPIRED].includes(item.status) },
+                { label: 'Expire Request', onClick: handleExpireRequest, condition: (item: any) => ![RequestStatus.DELIVERED, RequestStatus.CANCELLED, RequestStatus.EXPIRED].includes(item.status) },
+                { label: 'Cancel Request', onClick: handleCancelRequest, condition: (item: any) => ![RequestStatus.DELIVERED, RequestStatus.CANCELLED, RequestStatus.EXPIRED].includes(item.status) },
+                { label: 'Reschedule Request', onClick: handleResceduleRequest, condition: (item: any) => item.status === RequestStatus.EXPIRED },
+                { label: 'Transfer Request', onClick: handleTransferRequest, condition: (item: any) => ![RequestStatus.DELIVERED, RequestStatus.CANCELLED, RequestStatus.EXPIRED].includes(item.status) },
                 { label: 'View Customer', onClick: handleViewCustomer },
                 { label: 'Send Message', onClick: handleSendMessage },
+                { label: 'View Timeline', onClick: handleViewTimeline },
             ]
-        } else if (user?.userRole === UserRole.CUSTOMER || user?.userRole === UserRole.BUSINESS) {
+        } else if (isBusiness || isCustomer) {
             return [
-                { label: 'Cancel Request', onClick: handleCancelRequest, condition: (item: any) => item.status === RequestStatus.PENDING },
+                { label: 'Cancel Request', onClick: handleCancelRequest, condition: (item: any) => item.status === RequestStatus.PLACED },
+                { label: 'View Timeline', onClick: handleViewTimeline },
             ]
         } else {
             return []
@@ -277,16 +326,64 @@ function Requests() {
                 <Modal isOpen={isPopupOpen} onClose={() => setIsPopupOpen(false)}>
                     <Modal.Header>Create Request</Modal.Header>
                     <Modal.Content>
+                        {
+                            isOutletManager &&
+                            <div className='mb-2'>
+                                <CheckBox id='' label='Is Existing Customer' checked={isExistingCustomer} onChange={(value: boolean) => setIsExistingCustomer(value)} />
+                            </div>
+                        }
                         <div className='mb-2'>
                             {
-                                user?.userRole === UserRole.OUTLET_MANAGER ?
-                                    <Select
-                                        label='Customer/Business'
-                                        value={formData.customerId}
-                                        options={(customers || []).map((customer) => ({ value: String(customer._id), label: `${customer.firstName} (${customer.lastName}) - ${customer.email}` }))}
-                                        onChange={handleChangeField.bind(null, 'customerId')}
-                                        error={formErrors.outlet}
-                                    /> :
+                                isOutletManager ?
+
+                                    isExistingCustomer ?
+                                        <Select
+                                            label='Customer/Business'
+                                            value={formData.customerId}
+                                            options={(customers || []).map((customer) => ({ value: String(customer._id), label: `${customer.firstName} (${customer.lastName}) - ${customer.email}` }))}
+                                            onChange={handleChangeField.bind(null, 'customerId')}
+                                            error={formErrors.outlet}
+                                        /> :
+                                        <>
+                                            <div className='mb-2'>
+                                                <Input
+                                                    label='Customer Name'
+                                                    type='text'
+                                                    value={formData.customerName}
+                                                    onChange={handleChangeField.bind(null, 'customerName')}
+                                                    error={formErrors.customerName}
+                                                />
+                                            </div>
+                                            <div className='mb-2'>
+                                                <Input
+                                                    label='Customer Email'
+                                                    type='text'
+                                                    value={formData.customerEmail}
+                                                    onChange={handleChangeField.bind(null, 'customerEmail')}
+                                                    error={formErrors.customerEmail}
+                                                />
+                                            </div>
+                                            <div className='mb-2'>
+                                                <Input
+                                                    label='Customer PhoneNumber'
+                                                    type='text'
+                                                    value={formData.customerPhoneNumber}
+                                                    onChange={handleChangeField.bind(null, 'customerPhoneNumber')}
+                                                    error={formErrors.customerPhoneNumber}
+                                                />
+                                            </div>
+                                            <div className='mb-2'>
+                                                <Input
+                                                    label='Customer Address'
+                                                    type='text'
+                                                    value={formData.customerAddress}
+                                                    onChange={handleChangeField.bind(null, 'customerAddress')}
+                                                    error={formErrors.customerAddress}
+                                                />
+                                            </div>
+                                        </>
+
+                                    :
                                     <Select
                                         label='Outlet'
                                         value={formData.outlet}
@@ -296,7 +393,13 @@ function Requests() {
                                     />
                             }
                         </div>
+                        <div className="mb-2">
+                            <Select
+                                error={formErrors.type}
+                                options={Object.keys(GasTypes).map((key: string) => ({ label: (GasTypesValues as any)[key], value: key }))}
+                                value={formData.type} label='Type' onChange={handleChangeField.bind(null, 'type')} />
 
+                        </div>
                         <div className='mb-2'>
                             <Input
                                 label='Quantity'
@@ -339,6 +442,9 @@ function Requests() {
 
                 {
                     currentRequest && currentRequest.action === 'transfer' && <Transfer id={currentRequest.id} onClose={() => setCurrentRequest(null)} />
+                }
+                {
+                    currentRequest && currentRequest.action === 'timeline' && <TimelineView events={currentRequest.item.timelines} onClose={() => setCurrentRequest(null)} />
                 }
             </div>
         </AppLayout>

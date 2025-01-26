@@ -271,4 +271,4 @@ function Outlets() {
     );
 }
 
-export default AuthRoleCheck(Outlets, { roles: [UserRole.DISTRIBUTOR]})
+export default AuthRoleCheck(Outlets, { roles: [UserRole.ADMIN]})

@@ -2,7 +2,7 @@
 import { ValidateBody } from "@/app/api/middleware/validator";
 import DatabaseService from "@/app/api/utils/db";
 import Inventory from "@/app/api/models/inventory.model";
-import { HTTP_STATUS } from "@/constants/common";
+import { GasTypes, HTTP_STATUS } from "@/constants/common";
 import { NextResponse } from "next/server";
 import { CreateInventoryDTO } from "../../dto/inventory.dto";
 import { AuthGuard } from "../../middleware/authenticator";
@@ -43,7 +43,12 @@ class OutletController {
 
         if (!inventory) {
             const newInventory = new Inventory({
-                currentStock: payload.quantity,
+                currentStock: {
+                    [GasTypes.TWO_KG]: 0,
+                    [GasTypes.FIVE_KG]: 0,
+                    [GasTypes.TWELVE_HALF_KG]: 0,
+                    [GasTypes.SIXTEEN_KG]: 0,
+                },
                 history: [{ dateAdded: payload.dateAdded || new Date(), quantity: payload.quantity }]
             });
             await newInventory.save();
@@ -51,8 +56,11 @@ class OutletController {
         }
 
         // Update the existing inventory
-        inventory.currentStock += payload.quantity;
-        inventory.history.push({ dateAdded: payload.dateAdded || new Date(), quantity: payload.quantity });
+        inventory.currentStock = {
+            ...(inventory.currentStock || {}),
+            [payload.type as string]: (inventory.currentStock[payload.type as string] || 0) + payload.quantity
+        };
+        inventory.history.push({ type: payload.type, dateAdded: payload.dateAdded || new Date(), quantity: payload.quantity });
         await inventory.save();
 
 
