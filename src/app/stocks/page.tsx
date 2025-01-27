@@ -32,18 +32,21 @@ function Stocks() {
                 {/* Current Stock Card */}
                 <div className="bg-blue-100 dark:bg-blue-800 p-6 rounded-lg shadow-md mb-6">
                     <h2 className="text-lg font-bold text-gray-700 dark:text-gray-100">Current Gas Cylinders Stock</h2>
-                    <div className="font-extrabold">
-                        <table className='my-2 border-separate border border-gray-400 w-[300px]'>
-                            <tbody>
-                                {Object.entries(currentStock || {}).map((item, idx) => (
-                                    <tr key={idx}>
-                                        <td className='border border-gray-300'>{(GasTypesValues as any)[item[0]]} Cylinders</td>
-                                        <td className='border border-gray-300 text-center'>{item[1]}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                    {
+                        currentStock &&
+                        <div className="font-extrabold">
+                            <table className='my-2 border-separate border border-gray-400 w-[300px]'>
+                                <tbody>
+                                    {Object.entries(currentStock || {}).map((item, idx) => (
+                                        <tr key={idx}>
+                                            <td className='border border-gray-300'>{(GasTypesValues as any)[item[0]]} Cylinders</td>
+                                            <td className='border border-gray-300 text-center'>{item[1]}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    }
                 </div>
 
                 <h2 className="text-xl font-bold mb-4 text-gray-700 dark:text-gray-200">Stocks History</h2>
@@ -53,4 +56,4 @@ function Stocks() {
     );
 }
 
-export default AuthRoleCheck(Stocks, { roles: [UserRole.OUTLET_MANAGER]})
+export default AuthRoleCheck(Stocks, { roles: [UserRole.OUTLET_MANAGER] })

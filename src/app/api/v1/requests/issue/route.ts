@@ -62,7 +62,11 @@ class RequestsController {
         await request.save();
 
         // Reduce from Outlet Stocks
-        outlet.currentStock = outlet.currentStock - Number(request.quantity || 0);
+        outlet.currentStock = {
+            ...outlet.currentStock,
+            [request.type]: Number(outlet.currentStock[request.type] || 0) - Number(request.quantity || 0)
+        }
+        
         await outlet.save();
 
         return NextResponse.json(

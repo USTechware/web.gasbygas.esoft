@@ -140,6 +140,7 @@ class RequestsController {
             customerPhoneNumber: !customerId ? payload.customerPhoneNumber : undefined,
             customerAddress: !customerId ? payload.customerAddress : undefined,
             token,
+            type: payload.type,
             quantity: payload.quantity,
             deadlineForPickup,
             timelines: [

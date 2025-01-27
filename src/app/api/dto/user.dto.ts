@@ -50,3 +50,30 @@ export class ChangePassowordDTO {
     @IsNotEmpty({ message: "New Password is required" })
     newPassword!: string;
 }
+
+
+export class UpdateUserDTO {
+    @IsNotEmpty({ message: "First Name is required" })
+    @IsString()
+    firstName!: string;
+
+    @IsNotEmpty({ message: "Last Name is required" })
+    @IsString()
+    lastName!: string;
+
+    @IsNotEmpty()
+    @IsString()
+    phoneNumber!: string;
+
+    @IsNotEmpty()
+    @IsString()
+    address!: string;
+
+    @IsNotEmpty()
+    @IsString()
+    city!: string;
+
+    @IsNotEmpty()
+    @IsString()
+    district!: string;
+}

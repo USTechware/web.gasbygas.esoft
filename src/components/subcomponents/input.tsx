@@ -6,7 +6,7 @@ interface IInputProps {
   id?: string;
   label: string;
   value: number | string;
-  onChange: (value: string) => void;
+  onChange?: (value: string) => void;
   placeholder?: string;
   disabled?: boolean;
   error?: string;
@@ -41,7 +41,7 @@ const Input: React.FC<IInputProps & InputHTMLAttributes<HTMLInputElement>> = ({
         id={id}
         type={type}
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={onChange ? (e) => onChange(e.target.value): () => {}}
         placeholder={placeholder}
         disabled={disabled}
         className={classNames(

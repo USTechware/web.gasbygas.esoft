@@ -31,6 +31,7 @@ function Header() {
                     <DropdownMenu
                         buttonText={<Menu className="w-6 h-6" />}
                         items={[
+                            { label: 'Profile', onClick: () => window.location.href = "/settings/profile" },
                             { label: 'Change Password', onClick: () => window.location.href = "/settings/change-password" },
                             { label: 'Logout', onClick: onLogout }
                         ]}

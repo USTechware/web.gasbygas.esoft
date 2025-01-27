@@ -15,6 +15,12 @@ interface IUser {
   email: string;
   userRole: UserRole;
   outlet?: string;
+  city?: string;
+  district?: string;
+  address?: string;
+  phoneNumber?: string;
+  nationalIdNumber?: string;
+  businessRegId?: string;
   requestChangePassword?: boolean
 }
 
@@ -40,6 +46,18 @@ interface IChangePasswordPayload {
   currentPassword: string;
   newPassword: string;
 }
+
+interface IUpdateUserPayload {
+  firstName: string;
+  lastName: string;
+  nationalIdNumber?: string;
+  address: string;
+  city: string;
+  district: string;
+  phoneNumber?: string;
+  businessRegId?: string;
+}
+
 export const auth = {
   state: {
     isLoggedIn: false,
@@ -93,6 +111,14 @@ export const auth = {
       const result = await client.post('/api/v1/auth/change-password', payload)
       if (result.status === HTTP_STATUS.OK) {
         dispatch.auth.updateUser({ requestChangePassword: false })
+        return result.data
+      }
+    },
+
+    async updateProfile(payload: IUpdateUserPayload) {
+      const result = await client.put('/api/v1/user/update-user', payload)
+      if (result.status === HTTP_STATUS.OK) {
+        dispatch.auth.updateUser(payload)
         return result.data
       }
     },
