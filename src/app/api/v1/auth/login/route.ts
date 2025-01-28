@@ -2,6 +2,7 @@ import { LoginUserDTO } from "@/app/api/dto/user.dto";
 import { ValidateBody } from "@/app/api/middleware/validator";
 import DatabaseService from "@/app/api/utils/db";
 import User from "@/app/api/models/user.model";
+import "@/app/api/models/outlet.model";
 import { HTTP_STATUS } from "@/constants/common";
 import { NextResponse } from "next/server";
 import AuthProvider from "@/app/api/utils/auth";
@@ -42,8 +43,14 @@ class LoginController {
                     _id: user._id,
                     firstName: user.firstName,
                     lastName: user.lastName,
+                    address: user.address,
+                    city: user.city,
+                    district: user.district,
                     userRole: user.userRole,
                     email: user.email,
+                    outlet: user.outlet,
+                    nationalIdNumber: user.nationalIdNumber,
+                    phoneNumber: user.phoneNumber,
                     requestChangePassword: user.requestChangePassword
                 },
                 token,
