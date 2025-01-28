@@ -24,7 +24,7 @@ const Select: React.FC<SelectProps> = ({
   error,
   className = '',
 }) => {
-  const [searchQuery, setSearchQuery] = useState(value || '');
+  const [searchQuery, setSearchQuery] = useState((value ? options.find(o => o.value === value)?.label : '') || '');
   const [isOpen, setIsOpen] = useState(false);
 
   const filteredOptions = options.filter((option) =>

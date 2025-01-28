@@ -49,7 +49,7 @@ class EmailService {
     }
   }
 
-  static async notifyNewRequest(customerName: string, email: string, token: string, deadlineForPickup: string, quantity: number) {
+  static async notifyNewRequest(customerName: string, email: string, token: string, deadlineForPickup: string, type: string, quantity: number) {
     // HTML content for the email
     const htmlContent = `
       <html>
@@ -63,6 +63,7 @@ class EmailService {
             <ul style="list-style-type: none; padding: 0;">
               <li><strong>Request Token:</strong> ${token}</li>
               <li><strong>Deadline for Pickup:</strong> ${deadlineForPickup}</li>
+              <li><strong>Gas Type:</strong> ${type}</li>
               <li><strong>Quantity:</strong> ${quantity}</li>
             </ul>
             <p>
@@ -81,14 +82,54 @@ class EmailService {
     const headers = { "X-Priority": "1 (Highest)" };
 
     try {
-        const emailService = new EmailService();
-        const response = await emailService.sendEmail(subject, htmlContent, recipients, replyTo, headers);
-        console.log("Email sent successfully:", response);
+      const emailService = new EmailService();
+      const response = await emailService.sendEmail(subject, htmlContent, recipients, replyTo, headers);
+      console.log("Email sent successfully:", response);
     } catch (error) {
-        console.error("Failed to send new request notification email:", error);
-        throw error;
+      console.error("Failed to send new request notification email:", error);
+      throw error;
     }
-}
+  }
+
+  static async notifyOutletNewRequest(outletName: string, customerName: string, email: string, token: string, deadlineForPickup: string, type: string, quantity: number) {
+    // HTML content for the email
+    const htmlContent = `
+      <html>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; background-color: #f9f9f9; padding: 20px;">
+          <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+            <h2 style="color: #333;">New Request Received</h2>
+            <p>Dear ${outletName},</p>
+            <p>
+              You have received a new request from a customer. Below are the details:
+            </p>
+            <ul style="list-style-type: none; padding: 0;">
+              <li><strong>Customer Name:</strong> ${customerName}</li>
+              <li><strong>Request Token:</strong> ${token}</li>
+              <li><strong>Deadline for Pickup:</strong> ${deadlineForPickup}</li>
+              <li><strong>Gas Type:</strong> ${type}</li>
+              <li><strong>Quantity:</strong> ${quantity}</li>
+            </ul>
+            <p style="margin-top: 20px;">Thank you,<br />Gas By Gas System</p>
+          </div>
+        </body>
+      </html>
+    `;
+
+    // Email details
+    const subject = "New Request From Customer";
+    const recipients = [{ name: outletName, email }];
+    const replyTo = { name: "GasByGas Support", email: "mohamedsakirhassan@gmail.com" };
+    const headers = { "X-Priority": "1 (Highest)" };
+
+    try {
+      const emailService = new EmailService();
+      const response = await emailService.sendEmail(subject, htmlContent, recipients, replyTo, headers);
+      console.log("Email sent successfully:", response);
+    } catch (error) {
+      console.error("Failed to send new request notification email to outlet:", error);
+      throw error;
+    }
+  }
 
 
   static async sendOutletCreationEmail(name: string, email: string, password: string) {

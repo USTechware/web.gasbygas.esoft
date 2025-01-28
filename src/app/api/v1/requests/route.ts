@@ -1,10 +1,10 @@
 
 import { ValidateBody } from "@/app/api/middleware/validator";
 import DatabaseService from "@/app/api/utils/db";
-import Delivery, { IDelivery } from "@/app/api/models/deliveries.model";
+import Delivery from "@/app/api/models/deliveries.model";
 import Outlet, { IOutlet } from "@/app/api/models/outlet.model";
 import Request, { IRequest } from "@/app/api/models/request.model";
-import { GasTypes, HTTP_STATUS } from "@/constants/common";
+import { GasTypesValues, HTTP_STATUS } from "@/constants/common";
 import { NextResponse } from "next/server";
 import { AuthGuard } from "../../middleware/authenticator";
 import { CreateRequestDTO } from "../../dto/requests.dto";
@@ -156,14 +156,30 @@ class RequestsController {
         const customerName = customer ? customer.firstName : payload.customerName;
 
         if (customerEmail) {
-            // Send Email
-            await EmailService.notifyNewRequest(
-                customerName || 'User',
-                customerEmail,
-                token,
-                deadlineForPickup,
-                payload.quantity
-            )
+            process.nextTick(() => {
+                (async () => {
+                    // Send Email To Customer
+                    await EmailService.notifyNewRequest(
+                        customerName || 'Customer',
+                        customerEmail,
+                        token,
+                        deadlineForPickup,
+                        (GasTypesValues as any)[payload.type as string],
+                        payload.quantity
+                    )
+
+                    // Send Email To Outlet
+                    await EmailService.notifyOutletNewRequest(
+                        outletExists.managerName,
+                        customerName || 'Outlet Manager',
+                        outletExists.managerEmail,
+                        token,
+                        deadlineForPickup,
+                        (GasTypesValues as any)[payload.type as string],
+                        payload.quantity
+                    )
+                })()
+            })
         }
 
 

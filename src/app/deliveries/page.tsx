@@ -195,7 +195,7 @@ function Deliveries() {
                         <div className="mb-2 flex gap-2 justify-between items-end">
                             <Select
                                 options={Object.keys(GasTypes).map((key: string) => ({ label: (GasTypesValues as any)[key], value: key }))}
-                                value={item.type} label='Type' onChange={handleChangeField.bind(null, 'type')} />
+                                value={item.type || ''} label='Type' onChange={handleChangeField.bind(null, 'type')} />
 
                             <Input
                                 label='Quantity'
