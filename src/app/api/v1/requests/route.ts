@@ -50,9 +50,12 @@ class RequestsController {
         }
 
 
-        const requests = await Request.find(query).populate('outlet', {
+        const requests = await Request.find(query)
+            .sort({ createdAt: -1 })
+            .populate('outlet', {
             name: 1, district: 1, city: 1
-        }).populate('user', { firstName: 1, lastName: 1, email: 1 });
+            })
+            .populate('user', { firstName: 1, lastName: 1, email: 1 });
 
         return NextResponse.json(
             requests,
@@ -90,6 +93,13 @@ class RequestsController {
         if (!outletExists) {
             return NextResponse.json(
                 { message: "Invalid outlet ID" },
+                { status: HTTP_STATUS.BAD_REQUEST }
+            );
+        }
+
+        if (!outletExists.isActive) {
+            return NextResponse.json(
+                { message: "Outlet is under maintainance, please check later" },
                 { status: HTTP_STATUS.BAD_REQUEST }
             );
         }

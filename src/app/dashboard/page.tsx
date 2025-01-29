@@ -5,14 +5,23 @@ import DashboardWidget from '@/components/widget';
 import { Building2Icon, CalculatorIcon, CogIcon, ShipIcon, ShoppingCart } from 'lucide-react';
 import useUser from '@/hooks/useUser';
 import useDashboard from '@/hooks/useDashboard';
+import { useMemo } from 'react';
+import CustomerAppLayout from '@/components/layouts/CustomerAppLayout';
 
 export default function Dashboard() {
     const { user, isAdmin, isOutletManager, isCustomer, isBusiness } = useUser();
     const data = useDashboard();
+
+    const Layout = useMemo(() => {
+        if (isCustomer || isBusiness) {
+            return CustomerAppLayout
+        }
+        return AppLayout
+    }, [isCustomer, isBusiness])
     
     return (
-        <AppLayout>
-            <div className="min-h-screen bg-gray-100 dark:bg-gray-800">
+        <Layout>
+            <div className="bg-gray-100 dark:bg-gray-800">
                 <div className="container mx-auto py-8 px-4">
                     {!data ? (
                         <p className="text-center text-lg text-gray-600 dark:text-gray-300">Loading...</p>
@@ -53,6 +62,6 @@ export default function Dashboard() {
                     )}
                 </div>
             </div>
-        </AppLayout>
+        </Layout>
     );
 }

@@ -173,7 +173,7 @@ function Deliveries() {
     };
     return (
         <AppLayout>
-            <div className="min-h-screen bg-gray-100 dark:bg-gray-800 p-4">
+            <div className="bg-gray-100 dark:bg-gray-800 p-4">
                 <h1 className="text-2xl font-bold mb-4 text-gray-700 dark:text-gray-200">Delivery Requests</h1>
 
                 {/* Request Delivery Button */}

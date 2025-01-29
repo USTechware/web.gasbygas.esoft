@@ -94,7 +94,7 @@ function Inventory() {
     console.log(Object.entries(currentStock))
     return (
         <AppLayout>
-            <div className="min-h-screen bg-gray-100 dark:bg-gray-800 p-4">
+            <div className="bg-gray-100 dark:bg-gray-800 p-4">
                 <h1 className="text-2xl font-bold mb-6 text-gray-700 dark:text-gray-200">Inventory Management</h1>
 
                 {/* Current Stock Card */}

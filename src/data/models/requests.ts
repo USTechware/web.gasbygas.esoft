@@ -13,6 +13,7 @@ interface IRequest {
   token?: string;
   deadlineForPickup?: string;
   status?: RequestStatus;
+  createdAt?: RequestStatus;
 }
 interface IUpdateRequest {
   _id?: string;

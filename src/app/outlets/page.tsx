@@ -14,6 +14,8 @@ import { toast } from 'react-toastify';
 import ViewOutlet from '@/components/outlets/ViewOutlet';
 import AuthRoleCheck from '@/components/Auth';
 import { UserRole } from '../api/types/user';
+import withConfirm, { IWithConfirmProps } from '@/hoc/withConfirm';
+import StatusLabel from '@/components/status';
 
 
 const DistrictsList = Object.keys(AreasList).map((d) => ({ label: d, value: d }));
@@ -22,7 +24,7 @@ const CitiesList = (district: string) => (
     ((AreasList as any)[district]?.cities || []).map((c: string) => ({ label: c, value: c }))
 )
 
-function Outlets() {
+function Outlets({ openConfirm }: IWithConfirmProps) {
 
     const dispatch = useDispatch<Dispatch>();
 
@@ -34,7 +36,7 @@ function Outlets() {
 
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
-    const [currentOutlet, setCurrentOutlet] = useState<{ id: string, action: 'view' } | null>(null)
+    const [currentOutlet, setCurrentOutlet] = useState<{ id: string, action: 'view' | 'status' } | null>(null)
 
     const [isPopupOpen, setIsPopupOpen] = useState(false);
     const [formData, setFormData] = useState({
@@ -64,7 +66,8 @@ function Outlets() {
         { key: 'address', label: 'Address' },
         { key: 'managerName', label: 'Name' },
         { key: 'managerEmail', label: 'Email' },
-        { key: 'managerPhoneNumber', label: 'Tel' }
+        { key: 'managerPhoneNumber', label: 'Tel' },
+        { key: 'isActive', label: 'Status', render: ({ isActive }: { isActive: boolean }) => <StatusLabel status={ !isActive ? 'INACTIVE' : 'ACTIVE' } />  }
     ];
 
     const handleOpenPopup = () => {
@@ -169,9 +172,22 @@ function Outlets() {
         setCurrentOutlet({ id: item._id , action: 'view'})
     }
 
+    const onUpdateStatus = (item: any) => {
+        openConfirm({
+            message: `Are you sure to ${item.isActive ? 'disable' : 'enable'} this outlet?`,
+            actionLabel: 'Confirm',
+            onConfirm: () => {
+                dispatch.outlets.updateOutletStatus({
+                    id: item._id,
+                    isActive: !item.isActive
+                })
+            }
+        })
+    }
+
     return (
         <AppLayout>
-            <div className="min-h-screen bg-gray-100 dark:bg-gray-800 p-4">
+            <div className="bg-gray-100 dark:bg-gray-800 p-4">
                 <h1 className="text-2xl font-bold mb-4 text-gray-700 dark:text-gray-200">Outlets</h1>
 
                 {/* Add Outlet Button */}
@@ -185,7 +201,8 @@ function Outlets() {
                 {/* Outlets Table */}
                 <Table columns={columns} data={outlets}
                     actions={[
-                    { label: 'View Outlet', onClick: onViewOutlet}
+                    { label: 'View Outlet', onClick: onViewOutlet},
+                    { label: 'Update Status', onClick: onUpdateStatus},
                 ]}
                 />
 
@@ -271,4 +288,4 @@ function Outlets() {
     );
 }
 
-export default AuthRoleCheck(Outlets, { roles: [UserRole.ADMIN]})
+export default AuthRoleCheck(withConfirm(Outlets), { roles: [UserRole.ADMIN]})

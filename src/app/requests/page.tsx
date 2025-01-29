@@ -24,6 +24,7 @@ import Transfer from '@/components/requests/Transfer';
 import { GasTypes, GasTypesValues } from '@/constants/common';
 import CheckBox from '@/components/subcomponents/checkbox';
 import TimelineView from '@/components/Timeline';
+import CustomerAppLayout from '@/components/layouts/CustomerAppLayout';
 
 function Requests() {
     const dispatch = useDispatch<Dispatch>();
@@ -56,7 +57,6 @@ function Requests() {
         if (searchToken) {
             filtered = requests.filter(r => r.token?.toLowerCase().includes(searchToken.toLocaleLowerCase()))
         }
-
         setFilteredRequests(filtered as any)
     }, [searchToken, requests])
 
@@ -302,10 +302,17 @@ function Requests() {
         return [UserRole.CUSTOMER, UserRole.BUSINESS, UserRole.OUTLET_MANAGER].includes(user.userRole)
     }, [user?.userRole])
 
+    const Layout = useMemo(() => {
+        if (isCustomer || isBusiness) {
+            return CustomerAppLayout
+        }
+        return AppLayout
+    }, [isCustomer, isBusiness])
+
     return (
-        <AppLayout>
-            <div className="min-h-screen bg-gray-100 dark:bg-gray-800 p-4">
-                <h1 className="text-2xl font-bold mb-4 text-gray-700 dark:text-gray-200">Customer Requests</h1>
+        <Layout>
+            <div className="bg-gray-100 dark:bg-gray-800 p-4">
+                <h1 className="text-2xl font-bold mb-4 text-gray-700 dark:text-gray-200">Requests</h1>
 
                 {/* Add Request Button */}
                 {showAddRequest &&
@@ -447,7 +454,7 @@ function Requests() {
                     currentRequest && currentRequest.action === 'timeline' && <TimelineView events={currentRequest.item.timelines} onClose={() => setCurrentRequest(null)} />
                 }
             </div>
-        </AppLayout>
+        </Layout>
     );
 }
 

@@ -4,18 +4,19 @@ import AuthRoleCheck from '@/components/Auth';
 import AppLayout from '@/components/layouts/AppLayout';
 import Input from '@/components/subcomponents/input';
 import Button from '@/components/subcomponents/button';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { Dispatch } from '@/data';
 import { toast } from 'react-toastify';
 import { UserRole } from '@/app/api/types/user';
 import { useRouter } from 'next/navigation';
 import useUser from '@/hooks/useUser';
+import CustomerAppLayout from '@/components/layouts/CustomerAppLayout';
 
 function ChangePassword() {
     const dispatch = useDispatch<Dispatch>();
 
-    const { user } = useUser();
+    const { user, isCustomer, isBusiness } = useUser();
 
     const router = useRouter()
 
@@ -79,9 +80,16 @@ function ChangePassword() {
         }
     };
 
+    const Layout = useMemo(() => {
+        if (isCustomer || isBusiness) {
+            return CustomerAppLayout
+        }
+        return AppLayout
+    }, [isCustomer, isBusiness])
+
     return (
-        <AppLayout>
-            <div className="min-h-screen bg-gray-100 dark:bg-gray-800 p-4">
+        <Layout>
+            <div className="bg-gray-100 dark:bg-gray-800 p-4">
                 <h1 className="text-2xl font-bold mb-6 text-gray-700 dark:text-gray-200">Change Password</h1>
                 {
                     user?.requestChangePassword && (
@@ -132,7 +140,7 @@ function ChangePassword() {
                     </div>
                 </div>
             </div>
-        </AppLayout>
+        </Layout>
     );
 }
 

@@ -40,7 +40,9 @@ class DeliveriesController {
             query = {}
         }
 
-        const deliveries = await Delivery.find(query).populate('outlet');
+        const deliveries = await Delivery.find(query)
+            .sort({ createdAt: -1 })
+            .populate('outlet');
 
         return NextResponse.json(
             deliveries,

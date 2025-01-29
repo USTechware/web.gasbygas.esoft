@@ -24,6 +24,7 @@ export interface IOutlet extends Document {
     managerPhoneNumber: string;
     currentStock: ICurrentStock;
     stockHistory: IStockHistory[]
+    isActive: boolean
 }
 
 const outletSchema = new Schema<IOutlet>(
@@ -37,6 +38,7 @@ const outletSchema = new Schema<IOutlet>(
         managerPhoneNumber: { type: String, required: true, trim: true },
         currentStock: { type: Schema.Types.Mixed, required: true},
         stockHistory: { type: Schema.Types.Mixed, required: true, trim: true },
+        isActive: { type: Schema.Types.Boolean, required: false, default: true, trim: true },
     },
     { timestamps: true }
 );

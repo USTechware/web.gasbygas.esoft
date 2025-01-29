@@ -29,15 +29,16 @@ class OutletController {
             );
         }
 
-        const query : FilterQuery<IOutlet> = {}
-       
+        const query: FilterQuery<IOutlet> = {}
+
         if (user && [UserRole.CUSTOMER, UserRole.BUSINESS].includes(user.userRole)) {
             query.district = user.district
         }
 
-        const outlets = await Outlet.find(query).sort({
-            createdAt: -1
-        });
+        const outlets = await Outlet.find(query)
+            .sort({
+                createdAt: -1
+            });
 
         return NextResponse.json(
             outlets,

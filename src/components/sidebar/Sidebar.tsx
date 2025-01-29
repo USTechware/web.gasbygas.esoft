@@ -53,13 +53,31 @@ export default function Sidebar() {
 
     const [collapsed, setCollapsed] = useState(false);
 
+    useEffect(() => {
+        const collaped = window.localStorage.getItem('sidebar-collapsed')
+
+        if (collaped && collaped === 'true') {
+            setCollapsed(true)
+        } else {
+            setCollapsed(false)
+        }
+    }, [])
+
+    const onToggleSideBar = () => {
+        setCollapsed(collapsed => {
+            window.localStorage.setItem('sidebar-collapsed', collapsed ? 'false' : 'true')
+            return !collapsed
+        })
+        
+    }
+
     return (
         <div className={`bg-gray-800 text-white transition-all ${collapsed ? 'w-16' : 'min-w-[250px] w-[250px]'}`}>
             {/* Logo */}
             <div className="h-16 flex items-center justify-between px-4">
                 {!collapsed && <Logo />}
                 <button
-                    onClick={() => setCollapsed(!collapsed)}
+                    onClick={onToggleSideBar}
                     className="p-1 rounded-lg hover:bg-gray-700"
                 >
                     {collapsed ? <ChevronRight /> : <ChevronLeft />}

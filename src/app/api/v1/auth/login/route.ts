@@ -16,12 +16,22 @@ class LoginController {
 
         // Find the user by email
         const user = await User.findOne({ email: payload.email })
-            .populate('outlet', { name: 1, _id: 0});
+            .populate('outlet', { name: 1, isActive: 1, _id: 0});
         if (!user) {
             return NextResponse.json(
                 { message: "User not found" },
                 { status: HTTP_STATUS.BAD_REQUEST }
             );
+        }
+
+        // Check if user is an Outlet and its status
+        if (user && user.outlet) {
+            if (!user.outlet.isActive) {
+                return NextResponse.json(
+                    { message: "Your outlet is disabled, please check with your Admin" },
+                    { status: HTTP_STATUS.BAD_REQUEST }
+                );
+            }
         }
 
         // Verify the password

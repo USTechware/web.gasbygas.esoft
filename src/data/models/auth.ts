@@ -94,12 +94,16 @@ export const auth = {
 
     },
     async fetchUser() {
-      const result = await client.get('/api/v1/user/fetch-user')
+      try {
+        const result = await client.get('/api/v1/user/fetch-user')
 
-      if (result.status === HTTP_STATUS.OK) {
-        dispatch.auth.setUser({
-          user: result.data.user
-        })
+        if (result.status === HTTP_STATUS.OK) {
+          dispatch.auth.setUser({
+            user: result.data.user
+          })
+        }
+      } catch (error) {
+
       }
     },
     async register(payload: IRegisterPayload) {

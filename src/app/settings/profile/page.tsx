@@ -4,7 +4,7 @@ import AuthRoleCheck from '@/components/Auth';
 import AppLayout from '@/components/layouts/AppLayout';
 import Input from '@/components/subcomponents/input';
 import Button from '@/components/subcomponents/button';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { Dispatch } from '@/data';
 import { toast } from 'react-toastify';
@@ -13,6 +13,7 @@ import { useRouter } from 'next/navigation';
 import useUser from '@/hooks/useUser';
 import AreasList from '../../../../public/areas.json';
 import Select from '@/components/subcomponents/select';
+import CustomerAppLayout from '@/components/layouts/CustomerAppLayout';
 
 const ErrorFields = {
     firstName: '',
@@ -112,9 +113,17 @@ function ChangePassword() {
             setIsLoading(false);
         }
     };
+
+    const Layout = useMemo(() => {
+        if (isCustomer || isBusiness) {
+            return CustomerAppLayout
+        }
+        return AppLayout
+    }, [isCustomer, isBusiness])
+
     return (
-        <AppLayout>
-            <div className="min-h-screen bg-gray-100 dark:bg-gray-800 p-4">
+        <Layout>
+            <div className="bg-gray-100 dark:bg-gray-800 p-4">
                 <h1 className="text-2xl font-bold mb-6 text-gray-700 dark:text-gray-200">Profile</h1>
 
                 <div className="bg-white dark:bg-gray-900 p-6 rounded-lg shadow-md max-w-lg mx-auto">
@@ -213,7 +222,7 @@ function ChangePassword() {
                     </div>
                 </div>
             </div>
-        </AppLayout>
+        </Layout>
     );
 }
 
