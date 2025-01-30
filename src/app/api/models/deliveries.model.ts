@@ -1,9 +1,8 @@
 import mongoose, { Schema, Document, Types } from "mongoose";
 import { DeliveryStatus } from "../types/deliveries";
-import { GasTypes } from "@/constants/common";
 
 export interface IRequestItem {
-    type: GasTypes;
+    productId?: Types.ObjectId | string;
     quantity: number
 }
 
@@ -24,7 +23,7 @@ const deliverySchema = new Schema<IDelivery>(
         outlet: { type: Schema.Types.ObjectId, required: true, ref: "Outlet" },
         items: {
             type: [{
-                type: { type: String, enum: Object.values(GasTypes), required: true },
+                productId: { type: Schema.Types.ObjectId, ref: "Product", required: true },
                 quantity: { type: Number, required: true }
             }],
             required: true

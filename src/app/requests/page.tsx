@@ -25,6 +25,7 @@ import { GasTypes, GasTypesValues } from '@/constants/common';
 import CheckBox from '@/components/subcomponents/checkbox';
 import TimelineView from '@/components/Timeline';
 import CustomerAppLayout from '@/components/layouts/CustomerAppLayout';
+import Num from '../api/utils/num';
 
 function Requests() {
     const dispatch = useDispatch<Dispatch>();
@@ -32,6 +33,7 @@ function Requests() {
     const requests = useSelector((state: RootState) => state.requests.list);
     const outlets = useSelector((state: RootState) => state.outlets.list);
     const customers = useSelector((state: RootState) => state.outlets.customers);
+    const products = useSelector((state: RootState) => state.products.list);
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
     const [isExistingCustomer, setIsExistingCustomer] = useState<boolean>(true);
@@ -61,6 +63,7 @@ function Requests() {
     }, [searchToken, requests])
 
     useEffect(() => {
+        dispatch.products.fetchProducts();
         dispatch.outlets.fetchOutlets();
         dispatch.requests.fetchRequests();
     }, [dispatch]);
@@ -73,7 +76,7 @@ function Requests() {
         customerPhoneNumber: '',
         customerAddress: '',
         outlet: '',
-        type: GasTypes.TWO_KG,
+        productId: products?.length ? products[0]._id : null,
         quantity: 0,
     });
 
@@ -84,14 +87,14 @@ function Requests() {
         customerPhoneNumber: '',
         customerAddress: '',
         outlet: '',
-        type: '',
+        productId: '',
         quantity: '',
     });
 
     const columns = [
         { key: 'token', label: 'Token' },
         { key: 'outlet', label: 'Outlet', render: (request: any) => `${request.outlet.name}` },
-        { key: 'type', label: 'Type', render: (request: any) => (GasTypesValues as any)[request.type] },
+        { key: 'product', label: 'Product', render: (request: any) => products.find(p => p._id === request.productId)?.name },
         { key: 'quantity', label: 'Quantity' },
         {
             key: 'status', label: 'Status', render: (request: any) => <StatusLabel status={request.status} />
@@ -122,7 +125,7 @@ function Requests() {
             customerPhoneNumber: '',
             customerAddress: '',
             outlet: '',
-            type: GasTypes.TWO_KG,
+            productId: products?.[0]?._id,
             quantity: 0,
         });
         setFormErrors({
@@ -132,7 +135,7 @@ function Requests() {
             customerPhoneNumber: '',
             customerAddress: '',
             outlet: '',
-            type: '',
+            productId: '',
             quantity: '',
         });
         setIsPopupOpen(false);
@@ -153,7 +156,7 @@ function Requests() {
             customerPhoneNumber: '',
             customerAddress: '',
             outlet: '',
-            type: '',
+            productId: '',
             quantity: '',
         };
         let isValid = true;
@@ -186,7 +189,7 @@ function Requests() {
         setIsLoading(true);
         try {
             const payload: any = {
-                type: formData.type,
+                productId: formData.productId,
                 quantity: formData.quantity,
                 customerId: undefined,
                 outlet: undefined
@@ -402,9 +405,9 @@ function Requests() {
                         </div>
                         <div className="mb-2">
                             <Select
-                                error={formErrors.type}
-                                options={Object.keys(GasTypes).map((key: string) => ({ label: (GasTypesValues as any)[key], value: key }))}
-                                value={formData.type} label='Type' onChange={handleChangeField.bind(null, 'type')} />
+                                error={formErrors.productId}
+                                options={products.map(p => ({ label: p.name, value: p._id }))}
+                                value={formData.productId} label='Product' onChange={handleChangeField.bind(null, 'productId')} />
 
                         </div>
                         <div className='mb-2'>
@@ -412,25 +415,43 @@ function Requests() {
                                 label='Quantity'
                                 type='number'
                                 min={0}
+                                max={10}
                                 value={formData.quantity}
                                 onChange={handleChangeField.bind(null, 'quantity')}
                                 error={formErrors.quantity}
                             />
                         </div>
-
+                        {formData.productId && Number(formData.quantity) > 0 &&
+                            <div className="flex flex-col items-start gap-2 p-4 border rounded-lg shadow-sm bg-white">
+                                {(
+                                    <div className="text-lg font-semibold text-gray-800">
+                                        Total Amount:
+                                        <span className="ml-2 text-green-600">
+                                            {Num.calculateTotal(products.find(p => p._id === formData.productId), formData.quantity)}
+                                        </span>
+                                    </div>
+                                )}
+                                <p className="text-sm text-gray-600">
+                                    Payable when handing over the empties and collecting new cylinders.
+                                </p>
+                            </div>
+                        }
                     </Modal.Content>
                     <Modal.Footer>
-                        <div className="flex gap-2 justify-end">
-                            <Button
-                                text='Submit'
-                                isLoading={isLoading}
-                                onClick={handleSubmit}
-                            />
-                            <Button
-                                color='secondary'
-                                text='Cancel'
-                                onClick={handleClosePopup}
-                            />
+                        <div className="flex gap-2 space-between">
+
+                            <div className='flex gap-2'>
+                                <Button
+                                    text='Submit'
+                                    isLoading={isLoading}
+                                    onClick={handleSubmit}
+                                />
+                                <Button
+                                    color='secondary'
+                                    text='Cancel'
+                                    onClick={handleClosePopup}
+                                />
+                            </div>
                         </div>
                     </Modal.Footer>
                 </Modal>

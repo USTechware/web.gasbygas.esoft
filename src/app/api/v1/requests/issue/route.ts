@@ -64,7 +64,7 @@ class RequestsController {
         // Reduce from Outlet Stocks
         outlet.currentStock = {
             ...outlet.currentStock,
-            [request.type]: Number(outlet.currentStock[request.type] || 0) - Number(request.quantity || 0)
+            [request.productId as unknown as string]: Number(outlet.currentStock[request.productId as unknown as string] || 0) - Number(request.quantity || 0)
         }
         
         await outlet.save();

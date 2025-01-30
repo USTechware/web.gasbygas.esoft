@@ -1,7 +1,5 @@
 import { IsNotEmpty, IsNumber, IsEnum, IsMongoId, IsOptional, IsString, IsBoolean } from "class-validator";
-import { DeliveryStatus } from "../types/deliveries";
 import { RequestStatus } from "../types/requests";
-import { GasTypes } from "@/constants/common";
 
 
 export class CreateRequestDTO {
@@ -32,9 +30,10 @@ export class CreateRequestDTO {
     @IsOptional()
     @IsString()
     customerAddress?: string;
-    
-    @IsEnum(GasTypes, { message: `Gas Type must be one of: ${Object.keys(GasTypes).join(", ")}` })
-    type?: GasTypes;
+ 
+    @IsString()
+    productId!: string;
+
 
     @IsNotEmpty({ message: "Quantity is required" })
     @IsNumber({}, { message: "Quantity must be a number" })

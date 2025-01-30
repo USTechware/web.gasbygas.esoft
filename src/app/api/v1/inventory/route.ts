@@ -6,6 +6,7 @@ import { GasTypes, HTTP_STATUS } from "@/constants/common";
 import { NextResponse } from "next/server";
 import { CreateInventoryDTO } from "../../dto/inventory.dto";
 import { AuthGuard } from "../../middleware/authenticator";
+import productModel, { IProduct } from "../../models/product.model";
 
 class OutletController {
     @AuthGuard()
@@ -42,25 +43,35 @@ class OutletController {
         const inventory = await Inventory.findOne();
 
         if (!inventory) {
+            const products: IProduct[] = await productModel.find({});
+
+            const currentStock: Record<string, number> = {}
+
+            products.forEach(p => {
+                if (String(p._id) === payload.productId) {
+                    currentStock[p._id] = payload.quantity
+                } else {
+                    currentStock[p._id] = 0
+                }
+                
+            })
             const newInventory = new Inventory({
-                currentStock: {
-                    [GasTypes.TWO_KG]: 0,
-                    [GasTypes.FIVE_KG]: 0,
-                    [GasTypes.TWELVE_HALF_KG]: 0,
-                    [GasTypes.SIXTEEN_KG]: 0,
-                },
-                history: [{ dateAdded: payload.dateAdded || new Date(), quantity: payload.quantity }]
+                currentStock,
+                history: [{ productId: payload.productId, dateAdded: payload.dateAdded || new Date(), quantity: payload.quantity }]
             });
             await newInventory.save();
-            return newInventory;
+            return NextResponse.json(
+                newInventory,
+                { status: HTTP_STATUS.OK }
+            );
         }
 
         // Update the existing inventory
         inventory.currentStock = {
             ...(inventory.currentStock || {}),
-            [payload.type as string]: (inventory.currentStock[payload.type as string] || 0) + payload.quantity
+            [payload.productId as string]: (inventory.currentStock[payload.productId as string] || 0) + payload.quantity
         };
-        inventory.history.push({ type: payload.type, dateAdded: payload.dateAdded || new Date(), quantity: payload.quantity });
+        inventory.history.push({ productId: payload.productId, dateAdded: payload.dateAdded || new Date(), quantity: payload.quantity });
         await inventory.save();
 
 

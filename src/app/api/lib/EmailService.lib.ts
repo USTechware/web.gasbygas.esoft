@@ -49,7 +49,7 @@ class EmailService {
     }
   }
 
-  static async notifyNewRequest(customerName: string, email: string, token: string, deadlineForPickup: string, type: string, quantity: number) {
+  static async notifyNewRequest(customerName: string, email: string, token: string, deadlineForPickup: string, type: string, quantity: number, total: number) {
     // HTML content for the email
     const htmlContent = `
       <html>
@@ -65,6 +65,7 @@ class EmailService {
               <li><strong>Deadline for Pickup:</strong> ${deadlineForPickup}</li>
               <li><strong>Gas Type:</strong> ${type}</li>
               <li><strong>Quantity:</strong> ${quantity}</li>
+              <li><strong>Payable:</strong> ${total}</li>
             </ul>
             <p>
               Please ensure you complete the necessary steps before the deadline. If you have any questions, feel free to reply to this email or contact our support team.
@@ -91,7 +92,7 @@ class EmailService {
     }
   }
 
-  static async notifyOutletNewRequest(outletName: string, customerName: string, email: string, token: string, deadlineForPickup: string, type: string, quantity: number) {
+  static async notifyOutletNewRequest(outletName: string, customerName: string, email: string, token: string, deadlineForPickup: string, type: string, quantity: number, total: number) {
     // HTML content for the email
     const htmlContent = `
       <html>
@@ -108,6 +109,7 @@ class EmailService {
               <li><strong>Deadline for Pickup:</strong> ${deadlineForPickup}</li>
               <li><strong>Gas Type:</strong> ${type}</li>
               <li><strong>Quantity:</strong> ${quantity}</li>
+              <li><strong>Payable:</strong> ${total}</li>
             </ul>
             <p style="margin-top: 20px;">Thank you,<br />Gas By Gas System</p>
           </div>

@@ -13,14 +13,16 @@ import { GasTypes, GasTypesValues } from '@/constants/common';
 function Stocks() {
     const dispatch = useDispatch<Dispatch>();
     const { currentStock, stockHistory = [] } = useSelector((state: RootState) => state.outlets)
+    const products = useSelector((state: RootState) => state.products.list)
 
     useEffect(() => {
+        dispatch.products.fetchProducts();
         dispatch.outlets.fetchStocks();
     }, [])
 
     const columns = [
         { key: 'dateAdded', label: 'Date Added', render: (inv: any) => moment(inv.dateAdded).format('YYYY-MM-DD') },
-        { key: 'type', label: 'Type', render: ({ type: key }: { type: string }) => (GasTypesValues as any)[key] },
+        { key: 'product', label: 'Type', render: ({ productId }: { productId: string }) => products.find(p => p._id === productId)?.name },
         { key: 'quantity', label: 'Quantity' },
     ];
 
@@ -39,7 +41,7 @@ function Stocks() {
                                 <tbody>
                                     {Object.entries(currentStock || {}).map((item, idx) => (
                                         <tr key={idx}>
-                                            <td className='border border-gray-300'>{(GasTypesValues as any)[item[0]]} Cylinders</td>
+                                            <td className='border border-gray-300'>{ products.find(p => p._id === item[0])?.name } Cylinders</td>
                                             <td className='border border-gray-300 text-center'>{item[1]}</td>
                                         </tr>
                                     ))}
