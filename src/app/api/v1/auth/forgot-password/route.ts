@@ -1,16 +1,38 @@
-import { AuthGuard } from "@/app/api/middleware/authenticator"
 import DatabaseService from "@/app/api/utils/db"
 import { HTTP_STATUS } from "@/constants/common"
 import { NextResponse } from "next/server"
 
 class ForgotPasswordController {
-  @AuthGuard()
+  // @AuthGuard()
   async POST(req: Request) {
     await DatabaseService.connect()
 
-    const payload = (req as any).payload
+    try {
+      const body = await req.json()
+      const email = body.email
 
-    console.log(payload)
+      console.log(email)
+
+      if (!email) {
+        return NextResponse.json(
+          {
+            message: "Email is required",
+          },
+          {
+            status: HTTP_STATUS.BAD_REQUEST,
+          }
+        )
+      }
+    } catch (error) {
+      return NextResponse.json(
+        {
+          message: "Invalid request body",
+        },
+        {
+          status: HTTP_STATUS.BAD_REQUEST,
+        }
+      )
+    }
 
     // const user = await User.findOne({ _id: userId })
     // if (!user) {

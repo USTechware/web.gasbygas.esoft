@@ -105,7 +105,12 @@ export const auth = {
       await client.post("/api/v1/auth/register", payload)
     },
     async forgotPassword(payload: { email: string }) {
-      await client.post("/api/v1/auth/forgot-password", payload)
+      const { email } = payload
+      console.log(email)
+      const result = await client.post("/api/v1/auth/forgot-password", email)
+      if (result.status === HTTP_STATUS.OK) {
+        return result.data
+      }
     },
     async changePassword(payload: IChangePasswordPayload) {
       const result = await client.post("/api/v1/auth/change-password", payload)
