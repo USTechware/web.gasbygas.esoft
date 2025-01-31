@@ -1,5 +1,4 @@
 import { AuthGuard } from "@/app/api/middleware/authenticator"
-import User from "@/app/api/models/user.model"
 import DatabaseService from "@/app/api/utils/db"
 import { HTTP_STATUS } from "@/constants/common"
 import { NextResponse } from "next/server"
@@ -9,15 +8,17 @@ class ForgotPasswordController {
   async POST(req: Request) {
     await DatabaseService.connect()
 
-    const userId = (req as any).userId
+    const payload = (req as any).payload
 
-    const user = await User.findOne({ _id: userId })
-    if (!user) {
-      return NextResponse.json(
-        { message: "User not found" },
-        { status: HTTP_STATUS.BAD_REQUEST }
-      )
-    }
+    console.log(payload)
+
+    // const user = await User.findOne({ _id: userId })
+    // if (!user) {
+    //   return NextResponse.json(
+    //     { message: "User not found" },
+    //     { status: HTTP_STATUS.BAD_REQUEST }
+    //   )
+    // }
 
     // await EmailService.sendForgotPasswordEmail(user.email, user.name)
   }
