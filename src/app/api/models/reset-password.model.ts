@@ -9,7 +9,7 @@ export interface IForgotPassword {
 const ResetPasswordSchema = new mongoose.Schema<IForgotPassword>({
   token: { type: String, required: true },
   email: { type: String, required: true },
-  expires_at: { type: Date, required: true },
+  expires_at: { type: Date, required: true }, // expires in 15min
 })
 
 export default mongoose.models.ResetPasswordSchema ||

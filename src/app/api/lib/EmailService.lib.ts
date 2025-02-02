@@ -1,11 +1,14 @@
-import brevo, { TransactionalEmailsApiApiKeys } from '@getbrevo/brevo';
+import brevo, { TransactionalEmailsApiApiKeys } from "@getbrevo/brevo"
 
 class EmailService {
-  private apiInstance: brevo.TransactionalEmailsApi;
+  private apiInstance: brevo.TransactionalEmailsApi
 
   constructor() {
-    this.apiInstance = new brevo.TransactionalEmailsApi();
-    this.apiInstance.setApiKey(TransactionalEmailsApiApiKeys.apiKey, String(process.env.BREVO_EMAIL_API_KEY));
+    this.apiInstance = new brevo.TransactionalEmailsApi()
+    this.apiInstance.setApiKey(
+      TransactionalEmailsApiApiKeys.apiKey,
+      String(process.env.BREVO_EMAIL_API_KEY)
+    )
   }
 
   /**
@@ -28,28 +31,38 @@ class EmailService {
     params?: Record<string, any>
   ): Promise<any> {
     // Create an instance of the email object
-    const sendSmtpEmail = new brevo.SendSmtpEmail();
+    const sendSmtpEmail = new brevo.SendSmtpEmail()
 
     // Populate the email details
-    sendSmtpEmail.subject = subject;
-    sendSmtpEmail.htmlContent = htmlContent;
-    sendSmtpEmail.sender = { name: "GasByGas Support", email: 'mohamedsakirhassan@gmail.com' };
-    sendSmtpEmail.to = recipients;
-    if (replyTo) sendSmtpEmail.replyTo = replyTo;
-    if (headers) sendSmtpEmail.headers = headers;
-    if (params) sendSmtpEmail.params = params;
+    sendSmtpEmail.subject = subject
+    sendSmtpEmail.htmlContent = htmlContent
+    sendSmtpEmail.sender = {
+      name: "GasByGas Support",
+      email: "mohamedsakirhassan@gmail.com",
+    }
+    sendSmtpEmail.to = recipients
+    if (replyTo) sendSmtpEmail.replyTo = replyTo
+    if (headers) sendSmtpEmail.headers = headers
+    if (params) sendSmtpEmail.params = params
 
     try {
-      const response = await this.apiInstance.sendTransacEmail(sendSmtpEmail);
-      console.log('Email sent successfully:', response);
-      return response;
+      const response = await this.apiInstance.sendTransacEmail(sendSmtpEmail)
+      console.log("Email sent successfully:", response)
+      return response
     } catch (error) {
-      console.error('Failed to send email:', error);
-      throw error;
+      console.error("Failed to send email:", error)
+      throw error
     }
   }
 
-  static async notifyNewRequest(customerName: string, email: string, token: string, deadlineForPickup: string, type: string, quantity: number) {
+  static async notifyNewRequest(
+    customerName: string,
+    email: string,
+    token: string,
+    deadlineForPickup: string,
+    type: string,
+    quantity: number
+  ) {
     // HTML content for the email
     const htmlContent = `
       <html>
@@ -73,25 +86,42 @@ class EmailService {
           </div>
         </body>
       </html>
-    `;
+    `
 
     // Email details
-    const subject = "Your New Request Details";
-    const recipients = [{ name: customerName, email }];
-    const replyTo = { name: "GasByGas Support", email: "mohamedsakirhassan@gmail.com" };
-    const headers = { "X-Priority": "1 (Highest)" };
+    const subject = "Your New Request Details"
+    const recipients = [{ name: customerName, email }]
+    const replyTo = {
+      name: "GasByGas Support",
+      email: "mohamedsakirhassan@gmail.com",
+    }
+    const headers = { "X-Priority": "1 (Highest)" }
 
     try {
-      const emailService = new EmailService();
-      const response = await emailService.sendEmail(subject, htmlContent, recipients, replyTo, headers);
-      console.log("Email sent successfully:", response);
+      const emailService = new EmailService()
+      const response = await emailService.sendEmail(
+        subject,
+        htmlContent,
+        recipients,
+        replyTo,
+        headers
+      )
+      console.log("Email sent successfully:", response)
     } catch (error) {
-      console.error("Failed to send new request notification email:", error);
-      throw error;
+      console.error("Failed to send new request notification email:", error)
+      throw error
     }
   }
 
-  static async notifyOutletNewRequest(outletName: string, customerName: string, email: string, token: string, deadlineForPickup: string, type: string, quantity: number) {
+  static async notifyOutletNewRequest(
+    outletName: string,
+    customerName: string,
+    email: string,
+    token: string,
+    deadlineForPickup: string,
+    type: string,
+    quantity: number
+  ) {
     // HTML content for the email
     const htmlContent = `
       <html>
@@ -113,26 +143,41 @@ class EmailService {
           </div>
         </body>
       </html>
-    `;
+    `
 
     // Email details
-    const subject = "New Request From Customer";
-    const recipients = [{ name: outletName, email }];
-    const replyTo = { name: "GasByGas Support", email: "mohamedsakirhassan@gmail.com" };
-    const headers = { "X-Priority": "1 (Highest)" };
+    const subject = "New Request From Customer"
+    const recipients = [{ name: outletName, email }]
+    const replyTo = {
+      name: "GasByGas Support",
+      email: "mohamedsakirhassan@gmail.com",
+    }
+    const headers = { "X-Priority": "1 (Highest)" }
 
     try {
-      const emailService = new EmailService();
-      const response = await emailService.sendEmail(subject, htmlContent, recipients, replyTo, headers);
-      console.log("Email sent successfully:", response);
+      const emailService = new EmailService()
+      const response = await emailService.sendEmail(
+        subject,
+        htmlContent,
+        recipients,
+        replyTo,
+        headers
+      )
+      console.log("Email sent successfully:", response)
     } catch (error) {
-      console.error("Failed to send new request notification email to outlet:", error);
-      throw error;
+      console.error(
+        "Failed to send new request notification email to outlet:",
+        error
+      )
+      throw error
     }
   }
 
-
-  static async sendOutletCreationEmail(name: string, email: string, password: string) {
+  static async sendOutletCreationEmail(
+    name: string,
+    email: string,
+    password: string
+  ) {
     // HTML content for the email
     const htmlContent = `
           <html>
@@ -154,32 +199,39 @@ class EmailService {
               </div>
             </body>
           </html>
-        `;
+        `
 
     // Email details
-    const subject = "Welcome to Our Platform!";
-    const recipients = [{ name, email }];
-    const replyTo = { name: "GasByGas Support", email: "mohamedsakirhassan@gmail.com" };
-    const headers = { "X-Priority": "1 (Highest)" };
+    const subject = "Welcome to Our Platform!"
+    const recipients = [{ name, email }]
+    const replyTo = {
+      name: "GasByGas Support",
+      email: "mohamedsakirhassan@gmail.com",
+    }
+    const headers = { "X-Priority": "1 (Highest)" }
 
     try {
       // Call the EmailService to send the email
-      const emailService = new EmailService();
+      const emailService = new EmailService()
       const response = await emailService.sendEmail(
         subject,
         htmlContent,
         recipients,
         replyTo,
         headers
-      );
-      console.log("Email sent successfully:", response);
+      )
+      console.log("Email sent successfully:", response)
     } catch (error) {
-      console.error("Failed to send outlet creation email:", error);
-      throw error;
+      console.error("Failed to send outlet creation email:", error)
+      throw error
     }
   }
 
-  static async notifyCustomerHandoverEmptyCylinderAndCollect(customerName: string, email: string, dateToBeCollected: string) {
+  static async notifyCustomerHandoverEmptyCylinderAndCollect(
+    customerName: string,
+    email: string,
+    dateToBeCollected: string
+  ) {
     // HTML content for the email
     const htmlContent = `
         <html>
@@ -199,26 +251,40 @@ class EmailService {
             </div>
           </body>
         </html>
-      `;
+      `
 
     // Email details
-    const subject = "Action Required: Handover Empty Cylinder and Collect New Cylinder";
-    const recipients = [{ name: customerName, email }];
-    const replyTo = { name: "GasByGas Support", email: "mohamedsakirhassan@gmail.com" };
-    const headers = { "X-Priority": "1 (Highest)" };
+    const subject =
+      "Action Required: Handover Empty Cylinder and Collect New Cylinder"
+    const recipients = [{ name: customerName, email }]
+    const replyTo = {
+      name: "GasByGas Support",
+      email: "mohamedsakirhassan@gmail.com",
+    }
+    const headers = { "X-Priority": "1 (Highest)" }
 
     try {
-      const emailService = new EmailService();
-      const response = await emailService.sendEmail(subject, htmlContent, recipients, replyTo, headers);
-      console.log("Email sent successfully:", response);
+      const emailService = new EmailService()
+      const response = await emailService.sendEmail(
+        subject,
+        htmlContent,
+        recipients,
+        replyTo,
+        headers
+      )
+      console.log("Email sent successfully:", response)
     } catch (error) {
-      console.error("Failed to send handover notification email:", error);
-      throw error;
+      console.error("Failed to send handover notification email:", error)
+      throw error
     }
   }
 
-
-  static async notifyCustomerOrderRescheduled(customerName: string, email: string, newDate: string, reason: string) {
+  static async notifyCustomerOrderRescheduled(
+    customerName: string,
+    email: string,
+    newDate: string,
+    reason: string
+  ) {
     // HTML content for the email
     const htmlContent = `
       <html>
@@ -240,25 +306,83 @@ class EmailService {
           </div>
         </body>
       </html>
-    `;
+    `
 
     // Email details
-    const subject = "Your Order Has Been Rescheduled";
-    const recipients = [{ name: customerName, email }];
-    const replyTo = { name: "GasByGas Support", email: "mohamedsakirhassan@gmail.com" };
-    const headers = { "X-Priority": "1 (Highest)" };
+    const subject = "Your Order Has Been Rescheduled"
+    const recipients = [{ name: customerName, email }]
+    const replyTo = {
+      name: "GasByGas Support",
+      email: "mohamedsakirhassan@gmail.com",
+    }
+    const headers = { "X-Priority": "1 (Highest)" }
 
     try {
-      const emailService = new EmailService();
-      const response = await emailService.sendEmail(subject, htmlContent, recipients, replyTo, headers);
-      console.log("Email sent successfully:", response);
+      const emailService = new EmailService()
+      const response = await emailService.sendEmail(
+        subject,
+        htmlContent,
+        recipients,
+        replyTo,
+        headers
+      )
+      console.log("Email sent successfully:", response)
     } catch (error) {
-      console.error("Failed to send order rescheduled email:", error);
-      throw error;
+      console.error("Failed to send order rescheduled email:", error)
+      throw error
     }
   }
 
+  static async sendChangePasswordToken(email: string, token: string) {
+    const resetUrl = `http://localhost:3000/auth/change-password?token=${token}&email=${encodeURIComponent(
+      email
+    )}`
 
+    const htmlContent = `
+      <html>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; background-color: #f9f9f9; padding: 20px;">
+          <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+            <h2 style="color: #333;">Reset Your Password</h2>
+            <p>
+              You requested to reset your password. Please click the button below to set a new password:
+            </p>
+            <p style="text-align: center;">
+              <a href="${resetUrl}" style="background-color: #007bff; color: #ffffff; padding: 12px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                Reset Password
+              </a>
+            </p>
+            <p>
+              If you did not request this, you can safely ignore this email. The link will expire in 15 minutes.
+            </p>
+            <p style="margin-top: 20px;">Best regards,<br />The Team</p>
+          </div>
+        </body>
+      </html>
+    `
+
+    const subject = "Password Reset Request"
+    const recipients = [{ name: email, email }]
+    const replyTo = {
+      name: "GasByGas Support",
+      email: "mohamedsakirhassan@gmail.com",
+    }
+    const headers = { "X-Priority": "1 (Highest)" }
+
+    try {
+      const emailService = new EmailService()
+      const response = await emailService.sendEmail(
+        subject,
+        htmlContent,
+        recipients,
+        replyTo,
+        headers
+      )
+      console.log("Password reset email sent successfully:", response)
+    } catch (error) {
+      console.error("Failed to send password reset email:", error)
+      throw error
+    }
+  }
 }
 
-export default EmailService;
+export default EmailService
