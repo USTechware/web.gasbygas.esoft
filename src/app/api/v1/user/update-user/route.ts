@@ -1,6 +1,6 @@
 import DatabaseService from "@/app/api/utils/db";
 import User from "@/app/api/models/user.model";
-import { HTTP_STATUS } from "@/constants/common";
+import { BusinessVerifcationStatus, HTTP_STATUS } from "@/constants/common";
 import { NextResponse } from "next/server";
 import { AuthGuard } from "@/app/api/middleware/authenticator";
 import { UpdateUserDTO } from "@/app/api/dto/user.dto";
@@ -30,6 +30,11 @@ class Controller {
         user.address = payload.address;
         user.city = payload.city;
         user.district = payload.district;
+
+        if (payload.businessVerificationDoc) {
+            user.businessVerificationDoc = payload.businessVerificationDoc;
+            user.businessVerificationStatus = BusinessVerifcationStatus.PENDING;
+        }
 
         await user.save();
 

@@ -1,5 +1,5 @@
 import React, { ReactNode, useEffect, useState } from 'react'
-import { Menu, ChevronLeft, ChevronRight, Building, CalculatorIcon, ListChecks, TrainIcon, BookCheck, LayoutDashboardIcon } from 'lucide-react';
+import { Menu, ChevronLeft, ChevronRight, Building, CalculatorIcon, ListChecks, TrainIcon, BookCheck, LayoutDashboardIcon, UsersIcon } from 'lucide-react';
 import Logo from '../logo';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/data';
@@ -34,6 +34,7 @@ export default function Sidebar() {
                 { name: 'Outlets', href: '/outlets', icon: <Building className="w-6 h-6" /> },
                 { name: 'Inventory', href: '/inventory', icon: <CalculatorIcon className="w-6 h-6" /> },
                 { name: 'Deliveries', href: '/deliveries', icon: <TrainIcon className="w-6 h-6" /> },
+                { name: 'Customers', href: '/customers', icon: <UsersIcon className="w-6 h-6" /> },
             )
         } else if (isOutletManager) {
             menu.push(

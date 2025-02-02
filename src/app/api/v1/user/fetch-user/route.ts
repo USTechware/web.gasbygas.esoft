@@ -36,7 +36,10 @@ class Controller {
                     outlet: user.outlet,
                     nationalIdNumber: user.nationalIdNumber,
                     phoneNumber: user.phoneNumber,
-                    requestChangePassword: user.requestChangePassword
+                    requestChangePassword: user.requestChangePassword,
+                    company: user.company || undefined,
+                    businessRegId: user.businessRegId || undefined,
+                    businessVerificationStatus: user.businessVerificationStatus || undefined,
                 }
             },
             { status: HTTP_STATUS.OK }

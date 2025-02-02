@@ -186,8 +186,7 @@ function Deliveries() {
                         />
                     </div>
                 }
-
-                {/* Deliveries Table */}
+                
                 <Table columns={columns} data={deliveries} actions={actions} />
 
                 <Modal isOpen={isPopupOpen} onClose={handleClosePopup}>

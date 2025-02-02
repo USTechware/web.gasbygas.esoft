@@ -1,6 +1,6 @@
 import { UserRole } from "@/app/api/types/user";
 import client from "../client";
-import { HTTP_STATUS } from "@/constants/common";
+import { BusinessVerifcationStatus, HTTP_STATUS } from "@/constants/common";
 
 interface AuthState {
   isLoggedIn: boolean;
@@ -21,7 +21,10 @@ interface IUser {
   phoneNumber?: string;
   nationalIdNumber?: string;
   businessRegId?: string;
-  requestChangePassword?: boolean
+  requestChangePassword?: boolean;
+  company?: string;
+  businessVerificationDoc?: string;
+  businessVerificationStatus?: BusinessVerifcationStatus
 }
 
 interface ILoginPayload {
@@ -39,7 +42,8 @@ interface IRegisterPayload {
   nationalIdNumber: string;
   address: string;
   phoneNumber: string;
-  userRole: 'BUSINESS' | 'CUSTOMER';
+  company?: string;
+  userRole?: 'BUSINESS' | 'CUSTOMER';
   businessRegId?: string;
 }
 interface IChangePasswordPayload {

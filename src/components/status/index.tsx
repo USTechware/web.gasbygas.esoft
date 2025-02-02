@@ -2,7 +2,7 @@ import React from 'react';
 
 type StatusLabelProps = {
     status: 'PENDING' | 'CANCELLED' | 'PLACED'
-    | 'INACTIVE' | 'ACTIVE'
+    | 'INACTIVE' | 'ACTIVE' | 'VERIFIED' | 'DENIED'
     | 'CONFIRMED' | 'READY' | 'DISPATCHED' | 'ARRIVED' | 'DELIVERED' | 'COMPLETED' | 'EXPIRED';
 };
 
@@ -18,7 +18,9 @@ const statusStyles: Record<StatusLabelProps['status'], string> = {
     EXPIRED: 'bg-red-100 text-red-800',
     CANCELLED: 'bg-red-200 text-red-700',
     INACTIVE: 'bg-red-200 text-red-700',
+    DENIED: 'bg-red-200 text-red-700',
     ACTIVE: 'bg-green-100 text-green-800',
+    VERIFIED: 'bg-green-100 text-green-800',
 };
 
 const StatusLabel: React.FC<StatusLabelProps> = ({ status }) => {

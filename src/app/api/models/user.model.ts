@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { UserRole } from "../types/user";
+import { BusinessVerifcationStatus } from "@/constants/common";
 
 export interface IUser {
     _id: string;
@@ -16,6 +17,9 @@ export interface IUser {
     password: string;
     outlet?: string;
     requestChangePassword?: boolean;
+    businessVerificationStatus?: BusinessVerifcationStatus;
+    businessVerificationDoc?: string;
+    company?: string;
     createdAt: string;
     updatedAt: string;
 }
@@ -28,12 +32,15 @@ const userSchema = new mongoose.Schema<IUser>(
         userRole: { type: String, required: true, trim: true },
         password: { type: String, required: true },
         nationalIdNumber: { type: String, required: false },
+        company: { type: String, required: false },
         businessRegId: { type: String, required: false },
         phoneNumber: { type: String, required: false },
         district: { type: String, required: false },
         city: { type: String, required: false },
         address: { type: String, required: false },
         requestChangePassword: { type: Boolean, required: false },
+        businessVerificationStatus: { type: String, enum: BusinessVerifcationStatus, required: false },
+        businessVerificationDoc: { type: String, required: false },
         outlet: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Outlet',

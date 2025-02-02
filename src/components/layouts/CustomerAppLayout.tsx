@@ -5,6 +5,9 @@ import { RootState } from '@/data';
 import { Bell, Menu } from 'lucide-react';
 import DropdownMenu from '../subcomponents/dropdown';
 import Logo from '../logo';
+import { UserRole } from '@/app/api/types/user';
+import { BusinessVerifcationStatus } from '@/constants/common';
+import BusinessVerificationBanner from '../status/BusinessVerficationBanner';
 
 interface CustomerAppLayoutProps {
     children: ReactNode;
@@ -39,7 +42,7 @@ export default function CustomerAppLayout({ children }: CustomerAppLayoutProps) 
                     <div className="flex justify-between h-16 items-center">
                         {/* Logo */}
                         <div className="flex-shrink-0 flex items-center">
-                            <Logo/>
+                            <Logo />
                         </div>
 
                         {/* Navigation Links */}
@@ -59,6 +62,13 @@ export default function CustomerAppLayout({ children }: CustomerAppLayoutProps) 
                         </div>
 
                         <div className="flex items-center space-x-4">
+                            {
+                                user?.userRole === UserRole.BUSINESS &&
+                                <div>
+                                    <div className='text-sm font-bold'>{user.company}</div>
+                                    <div className='text-xs text-gray-400'>Business</div>
+                                </div>
+                            }
                             <a href="/notifications" className="p-2 text-gray-600 hover:text-primary rounded-full hover:bg-gray-100">
                                 <Bell className="h-5 w-5" />
                             </a>
@@ -78,7 +88,11 @@ export default function CustomerAppLayout({ children }: CustomerAppLayoutProps) 
             </nav>
             {/* Page Content */}
             <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <div className="rounded-xs shadow">
+                <div className="mt-2">
+                    {
+                        user?.userRole === UserRole.BUSINESS &&
+                        <BusinessVerificationBanner status={user.businessVerificationStatus as BusinessVerifcationStatus} />
+                    }
                     {children}
                 </div>
             </main>

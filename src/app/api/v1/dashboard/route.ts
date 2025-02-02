@@ -30,12 +30,18 @@ class Controller {
 
         switch (user.userRole) {
             case UserRole.ADMIN:
+                const customersCount = (await User.find({
+                    userRole: {
+                        $in: [UserRole.BUSINESS, UserRole.CUSTOMER]
+                    }
+                }).countDocuments());
                 const inventoryCount = (await Inventory.findOne().select({ currentStock: 1 }))?.currentStock || {};
                 const outletsCount = await Outlet.countDocuments();
                 const requestsCount = await Request.countDocuments();
                 const deliveriesCount = await Delivery.countDocuments();
 
                 data = {
+                    customers: customersCount,
                     inventory: Object.values(inventoryCount as Record<string, number>).reduce((c, i) => c += i, 0),
                     outlets: outletsCount,
                     requests: requestsCount,

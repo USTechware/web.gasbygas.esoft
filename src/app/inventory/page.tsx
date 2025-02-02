@@ -122,7 +122,6 @@ function Inventory() {
                     />
                 </div>
 
-                {/* History Table */}
                 <h2 className="text-xl font-bold mb-4 text-gray-700 dark:text-gray-200">Inventory History</h2>
                 <Table columns={columns} data={history} />
 

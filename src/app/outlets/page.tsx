@@ -198,7 +198,6 @@ function Outlets({ openConfirm }: IWithConfirmProps) {
                     />
                 </div>
 
-                {/* Outlets Table */}
                 <Table columns={columns} data={outlets}
                     actions={[
                     { label: 'View Outlet', onClick: onViewOutlet},

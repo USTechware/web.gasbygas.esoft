@@ -27,8 +27,17 @@ const Select: React.FC<SelectProps> = ({
   const [searchQuery, setSearchQuery] = useState((value ? options.find(o => o.value === value)?.label : '') || '');
   const [isOpen, setIsOpen] = useState(false);
 
-  const filteredOptions = options.filter((option) =>
-    option.label.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredOptions = options.filter((option) => {
+    let search = searchQuery.toLocaleLowerCase()
+    return option.label.toLowerCase().includes(search)
+  }
+
+  );
+
+  const restOptions = options.filter((option) => {
+    let search = searchQuery.toLocaleLowerCase()
+    return !option.label.toLowerCase().includes(search)
+  }
   );
 
   const selectClasses = classNames(
@@ -80,6 +89,25 @@ const Select: React.FC<SelectProps> = ({
             ) : (
               <li className="px-4 py-2 text-gray-500">No results found</li>
             )}
+            {
+              restOptions.length > 0 &&
+              <div className='my-0 w-full h-[1px] bg-gray-100'></div>
+            }
+            {
+              restOptions.map(option => (
+                <li
+                  key={option.value}
+                  className="px-4 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                  onClick={() => {
+                    onChange(option.value);
+                    setSearchQuery(option.label);
+                    setIsOpen(false);
+                  }}
+                >
+                  {option.label}
+                </li>
+              ))
+            }
           </ul>
         </div>
       )}

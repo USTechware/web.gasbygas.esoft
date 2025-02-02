@@ -6,6 +6,7 @@ import { inventory } from './inventory';
 import { requests } from './requests';
 import { dashboard } from './dashboard';
 import { products } from './products';
+import { customers } from './customers';
 
 export interface RootModel extends Models<RootModel> {
   auth: typeof auth;
@@ -15,6 +16,10 @@ export interface RootModel extends Models<RootModel> {
   requests: typeof requests;
   dashboard: typeof dashboard;
   products: typeof products;
+  customers: typeof customers;
 }
 
-export const models: RootModel = { auth, products, dashboard, deliveries, outlets, inventory, requests };
+export const models: RootModel = {
+  auth, products, dashboard, customers,
+  deliveries, outlets, inventory, requests
+};

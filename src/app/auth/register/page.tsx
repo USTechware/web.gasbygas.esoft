@@ -11,6 +11,8 @@ import { useRouter } from 'next/navigation';
 import Select from '@/components/subcomponents/select';
 import AreasList from '../../../../public/areas.json';
 import Input from '@/components/subcomponents/input';
+import FileUploader from '@/components/subcomponents/file';
+import { UserRole } from '@/app/api/types/user';
 
 type UserType = 'CUSTOMER' | 'BUSINESS';
 
@@ -32,8 +34,10 @@ interface FormData {
     city: string;
     address: string;
     phoneNumber: string;
+    company?: string;
     userRole: UserType;
     businessRegId?: string;
+    businessVerificationDoc?: string;
 }
 
 export default function RegisterPage() {
@@ -50,7 +54,7 @@ export default function RegisterPage() {
         city: '',
         address: '',
         phoneNumber: '',
-        userRole: 'CUSTOMER'
+        userRole: UserRole.CUSTOMER
     });
 
     const [errors, setErrors] = useState<Partial<FormData>>({});
@@ -85,7 +89,7 @@ export default function RegisterPage() {
         }
 
         // NIC validation
-        if (!form.nationalIdNumber) {
+        if (form.userRole === UserRole.CUSTOMER && !form.nationalIdNumber) {
             newErrors.nationalIdNumber = 'NIC is required';
             isValid = false;
         }
@@ -111,17 +115,20 @@ export default function RegisterPage() {
             isValid = false;
         }
 
+        if (form.userRole === 'BUSINESS' && !form.businessVerificationDoc) {
+            newErrors.businessVerificationDoc = 'Business Verfication Document is required';
+            isValid = false;
+        }
+
         setErrors(newErrors);
         return isValid;
     };
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
-
         if (!validateForm()) {
             return;
         }
-
         setIsLoading(true);
         try {
             await dispatch.auth.register(form);
@@ -170,18 +177,37 @@ export default function RegisterPage() {
                         error={errors.email} placeholder='Email'
                         onChange={handleChangeField.bind(null, 'email')} />
                 </div>
-                <div>
-                    <Input id='' label=' NIC Number' placeholder='NIC Number' value={form.nationalIdNumber}
-                        error={errors.nationalIdNumber}
-                        onChange={handleChangeField.bind(null, 'nationalIdNumber')} />
-                </div>
+                {
+                    form.userRole === UserRole.CUSTOMER &&
+                    <div>
+                        <Input id='' label=' NIC Number' placeholder='NIC Number' value={form.nationalIdNumber}
+                            error={errors.nationalIdNumber}
+                            onChange={handleChangeField.bind(null, 'nationalIdNumber')} />
+                    </div>
+                }
 
                 {form.userRole === 'BUSINESS' && (
-                    <div>
-                        <Input id='' label='Business Registration ID' placeholder='Business Registration ID' value={form.businessRegId || ''}
-                            error={errors.businessRegId}
-                            onChange={handleChangeField.bind(null, 'businessRegId')} />
-                    </div>
+                    <>
+                        <div>
+                            <Input id='' label='Company' placeholder='Company' value={form.company || ''}
+                                error={errors.company}
+                                onChange={handleChangeField.bind(null, 'company')} />
+                        </div>
+                        <div>
+                            <Input id='' label='Business Registration ID' placeholder='Business Registration ID' value={form.businessRegId || ''}
+                                error={errors.businessRegId}
+                                onChange={handleChangeField.bind(null, 'businessRegId')} />
+                        </div>
+                        <div>
+                            <FileUploader label='Business Verification Doc'
+                                fileUrl={form.businessVerificationDoc || ''}
+                                error={errors.businessVerificationDoc}
+                                setFileUrl={handleChangeField.bind(null, 'businessVerificationDoc')}
+                            />
+
+                        </div>
+                    </>
+
                 )}
 
                 <div>

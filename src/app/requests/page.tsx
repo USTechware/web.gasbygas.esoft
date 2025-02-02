@@ -26,9 +26,14 @@ import CheckBox from '@/components/subcomponents/checkbox';
 import TimelineView from '@/components/Timeline';
 import CustomerAppLayout from '@/components/layouts/CustomerAppLayout';
 import Num from '../api/utils/num';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 function Requests() {
     const dispatch = useDispatch<Dispatch>();
+
+    const params = useSearchParams();
+    const router = useRouter();
+
     const { user, isCustomer, isBusiness, isOutletManager } = useUser()
     const requests = useSelector((state: RootState) => state.requests.list);
     const outlets = useSelector((state: RootState) => state.outlets.list);
@@ -312,6 +317,23 @@ function Requests() {
         return AppLayout
     }, [isCustomer, isBusiness])
 
+
+    useEffect(() => {
+        if (params && params.get('p')) {
+            const productId = params.get('p');
+
+            if (products.find(p => p._id === productId)) {
+                setFormData(formData => ({
+                    ...formData,
+                    productId
+                }))
+                setIsPopupOpen(true)
+                router.push('/requests')
+            }
+
+        }
+    }, [params, products])
+
     return (
         <Layout>
             <div className="bg-gray-100 dark:bg-gray-800 p-4">
@@ -324,7 +346,6 @@ function Requests() {
                     </div>
                 }
 
-                {/* Requests Table */}
                 <div className='my-2 w-1/2'>
                     <Input label='Search by Token' placeholder='Search by Token' name='token' value={searchToken}
                         onChange={onSearchToken.bind(null, 'token')} />

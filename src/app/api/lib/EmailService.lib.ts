@@ -260,6 +260,51 @@ class EmailService {
     }
   }
 
+  static async notifyBusinessVerificationStatus(
+    businessName: string,
+    email: string,
+    status: "approved" | "rejected",
+    reason?: string
+  ) {
+    // Define the email content based on status
+    const subject = `Your Business Verification Status: ${status === "approved" ? "Approved" : "Rejected"}`;
+    const statusMessage =
+      status === "approved"
+        ? `<p>We are pleased to inform you that your business, <strong>${businessName}</strong>, has been successfully verified and approved.</p>`
+        : `<p>Unfortunately, your business, <strong>${businessName}</strong>, could not be verified at this time.</p>
+           <p><strong>Reason:</strong> ${reason || "Not specified"}</p>`;
+  
+    const htmlContent = `
+      <html>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; background-color: #f9f9f9; padding: 20px;">
+          <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+            <h2 style="color: #333;">Business Verification ${status === "approved" ? "Approved" : "Rejected"}</h2>
+            <p>Dear Business Owner,</p>
+            ${statusMessage}
+            <p>
+              If you have any questions or need further clarification, please reply to this email or contact our support team.
+            </p>
+            <p style="margin-top: 20px;">Best Regards,<br />The Team</p>
+          </div>
+        </body>
+      </html>
+    `;
+  
+    // Email details
+    const recipients = [{ name: businessName, email }];
+    const replyTo = { name: "GasByGas Support", email: "mohamedsakirhassan@gmail.com" };
+    const headers = { "X-Priority": "1 (Highest)" };
+  
+    try {
+      const emailService = new EmailService();
+      const response = await emailService.sendEmail(subject, htmlContent, recipients, replyTo, headers);
+      console.log("Email sent successfully:", response);
+    } catch (error) {
+      console.error("Failed to send business verification email:", error);
+      throw error;
+    }
+  }
+  
 
 }
 

@@ -4,7 +4,7 @@ import DatabaseService from "@/app/api/utils/db";
 import Delivery from "@/app/api/models/deliveries.model";
 import Outlet, { IOutlet } from "@/app/api/models/outlet.model";
 import Request, { IRequest } from "@/app/api/models/request.model";
-import { GasTypesValues, HTTP_STATUS } from "@/constants/common";
+import { BusinessVerifcationStatus, GasTypesValues, HTTP_STATUS } from "@/constants/common";
 import { NextResponse } from "next/server";
 import { AuthGuard } from "../../middleware/authenticator";
 import { CreateRequestDTO } from "../../dto/requests.dto";
@@ -54,7 +54,7 @@ class RequestsController {
         const requests = await Request.find(query)
             .sort({ createdAt: -1 })
             .populate('outlet', {
-            name: 1, district: 1, city: 1
+                name: 1, district: 1, city: 1
             })
             .populate('user', { firstName: 1, lastName: 1, email: 1 });
 
@@ -87,7 +87,23 @@ class RequestsController {
             payload.customerId ? payload.customerId : undefined : userId;
         const outletId = payload.outlet ?? user.outlet;
 
-        const customer = await User.findById(customerId)
+        const customer: IUser | null = await User.findById(customerId)
+
+
+        if (!customer) {
+            return NextResponse.json(
+                { message: "Invalid customer" },
+                { status: HTTP_STATUS.BAD_REQUEST }
+            );
+        }
+        // Check if customer is a Business and verification status
+        if (customer.userRole === UserRole.BUSINESS
+            && customer.businessVerificationStatus !== BusinessVerifcationStatus.VERIFIED) {
+            return NextResponse.json(
+                { message: "Business user not verified yet" },
+                { status: HTTP_STATUS.BAD_REQUEST }
+            );
+        }
 
         // Ensure the outlet exists
         const outletExists: IOutlet | null = await Outlet.findById(outletId);
