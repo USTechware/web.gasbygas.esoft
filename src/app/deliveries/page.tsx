@@ -18,9 +18,10 @@ import { DeliveryStatus } from '../api/types/deliveries';
 import useUser from '@/hooks/useUser';
 import { IRequestItem } from '../api/models/deliveries.model';
 import TimelineView from '@/components/Timeline';
+import withConfirm, { IWithConfirmProps } from '@/hoc/withConfirm';
 
 
-function Deliveries() {
+function Deliveries({ openConfirm }: IWithConfirmProps) {
     const dispatch = useDispatch<Dispatch>();
     const { user, isOutletManager, isAdmin } = useUser();
     const deliveries = useSelector((state: RootState) => state.deliveries.list);
@@ -108,15 +109,24 @@ function Deliveries() {
 
 
     const handleUpdateStatus = async (status: DeliveryStatus, item: any) => {
-        try {
-            const data = await dispatch.deliveries.confirmDelivery({ _id: item._id, status });
-            toast.success(data?.message || "Delivery has been updated successfully");
-            dispatch.deliveries.fetchDeliveries();
-            handleClosePopup();
-        } catch (error: any) {
-            toast.error(error?.response?.data?.message || "Unknown error occurred!");
-            console.log('Create delivery failed:', error);
-        }
+
+        openConfirm({
+            message: `Are you sure to update this delivery?`,
+            actionLabel: 'Confirm',
+            onConfirm: () => {
+                (async () => {
+                    try {
+                        const data = await dispatch.deliveries.confirmDelivery({ _id: item._id, status });
+                        toast.success(data?.message || "Delivery has been updated successfully");
+                        dispatch.deliveries.fetchDeliveries();
+                        handleClosePopup();
+                    } catch (error: any) {
+                        toast.error(error?.response?.data?.message || "Unknown error occurred!");
+                        console.log('Create delivery failed:', error);
+                    }
+                })()
+            }
+        })
     }
 
     const handleViewTimeline = async (item: any) => {
@@ -186,7 +196,7 @@ function Deliveries() {
                         />
                     </div>
                 }
-                
+
                 <Table columns={columns} data={deliveries} actions={actions} />
 
                 <Modal isOpen={isPopupOpen} onClose={handleClosePopup}>
@@ -194,7 +204,7 @@ function Deliveries() {
                     <Modal.Content>
                         <div className="mb-2 flex gap-2 justify-between items-end">
                             <Select
-                                options={products.map(p => ({ label: p.name, value: p._id}))}
+                                options={products.map(p => ({ label: p.name, value: p._id }))}
                                 value={String(item.productId) || ''} label='Product' onChange={handleChangeField.bind(null, 'productId')} />
 
                             <Input
@@ -216,7 +226,7 @@ function Deliveries() {
                                             className="flex items-center justify-between p-2 border rounded-lg bg-gray-50 hover:bg-gray-100"
                                         >
                                             <div>
-                                                <div className="font-medium text-gray-700">{ products.find(p => p._id === item.productId)?.name}</div>
+                                                <div className="font-medium text-gray-700">{products.find(p => p._id === item.productId)?.name}</div>
                                                 <div className="text-sm text-gray-500">Quantity: {item.quantity}</div>
                                             </div>
                                             <Button
@@ -256,4 +266,4 @@ function Deliveries() {
     );
 }
 
-export default AuthRoleCheck(Deliveries, { roles: [UserRole.ADMIN, UserRole.OUTLET_MANAGER] })
+export default AuthRoleCheck(withConfirm(Deliveries), { roles: [UserRole.ADMIN, UserRole.OUTLET_MANAGER] })
