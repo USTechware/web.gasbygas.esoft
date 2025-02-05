@@ -213,7 +213,6 @@ function Outlets({ openConfirm }: IWithConfirmProps) {
           <Button text=" Create Outlet" onClick={handleOpenPopup} />
         </div>
 
-        {/* Outlets Table */}
         <Table
           columns={columns}
           data={outlets}

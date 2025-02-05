@@ -1,4 +1,5 @@
-import { IsEmail, IsNotEmpty, IsOptional, IsString, MinLength } from "class-validator";
+import { BusinessVerifcationStatus } from "@/constants/common";
+import { IsEmail, IsEmpty, IsEnum, IsMongoId, IsNotEmpty, IsOptional, IsString, MinLength } from "class-validator";
 
 export class RegisterUserDTO {
     @IsNotEmpty({ message: "First Name is required" })
@@ -20,14 +21,26 @@ export class RegisterUserDTO {
     password!: string;
 
     @IsOptional()
-    nationalIdNumber!: string;
+    nationalIdNumber?: string;
+
 
     @IsOptional()
-    businessRegId!: string;
+    company?: string;
+
+    @IsOptional()
+    businessRegId?: string;
 
     @IsNotEmpty()
     @IsString()
     phoneNumber!: string;
+
+    @IsOptional()
+    @IsString()
+    businessVerificationStatus?: BusinessVerifcationStatus;
+
+    @IsOptional()
+    @IsString()
+    businessVerificationDoc?: string;
 
     @IsNotEmpty()
     @IsString()
@@ -76,4 +89,17 @@ export class UpdateUserDTO {
     @IsNotEmpty()
     @IsString()
     district!: string;
+
+    @IsOptional()
+    @IsString()
+    businessVerificationDoc?: string;
+}
+
+export class UpdateBusinessStatusDTO {
+    @IsNotEmpty({ message: "Business User ID is required" })
+    @IsMongoId({ message: "Busniness User ID must be a valid MongoDB ObjectId" })
+    _id!: string;
+
+    @IsEnum(BusinessVerifcationStatus, { message: `Status must be one of: ${Object.values(BusinessVerifcationStatus).join(", ")}` })
+    status?: BusinessVerifcationStatus;
 }

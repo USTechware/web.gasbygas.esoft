@@ -1,17 +1,9 @@
-import { GasTypes } from "@/constants/common";
 import mongoose, { Schema, Document } from "mongoose";
 
 interface IStockHistory{
     dateAdded: Date;
     quantity: number;
-    type: GasTypes;
-}
-
-interface ICurrentStock{
-    [GasTypes.TWO_KG]: number;
-    [GasTypes.FIVE_KG]: number;
-    [GasTypes.TWELVE_HALF_KG]: number;
-    [GasTypes.SIXTEEN_KG]: number;
+    productId: Schema.Types.ObjectId | string;
 }
 
 export interface IOutlet extends Document {
@@ -22,7 +14,7 @@ export interface IOutlet extends Document {
     managerName: string;
     managerEmail: string;
     managerPhoneNumber: string;
-    currentStock: ICurrentStock;
+    currentStock: Schema.Types.Mixed;
     stockHistory: IStockHistory[]
     isActive: boolean
 }

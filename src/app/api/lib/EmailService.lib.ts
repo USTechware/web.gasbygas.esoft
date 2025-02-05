@@ -61,7 +61,8 @@ class EmailService {
     token: string,
     deadlineForPickup: string,
     type: string,
-    quantity: number
+    quantity: number,
+    total: number
   ) {
     // HTML content for the email
     const htmlContent = `
@@ -78,6 +79,7 @@ class EmailService {
               <li><strong>Deadline for Pickup:</strong> ${deadlineForPickup}</li>
               <li><strong>Gas Type:</strong> ${type}</li>
               <li><strong>Quantity:</strong> ${quantity}</li>
+              <li><strong>Payable:</strong> ${total}</li>
             </ul>
             <p>
               Please ensure you complete the necessary steps before the deadline. If you have any questions, feel free to reply to this email or contact our support team.
@@ -120,7 +122,8 @@ class EmailService {
     token: string,
     deadlineForPickup: string,
     type: string,
-    quantity: number
+    quantity: number,
+    total: number
   ) {
     // HTML content for the email
     const htmlContent = `
@@ -138,6 +141,7 @@ class EmailService {
               <li><strong>Deadline for Pickup:</strong> ${deadlineForPickup}</li>
               <li><strong>Gas Type:</strong> ${type}</li>
               <li><strong>Quantity:</strong> ${quantity}</li>
+              <li><strong>Payable:</strong> ${total}</li>
             </ul>
             <p style="margin-top: 20px;">Thank you,<br />Gas By Gas System</p>
           </div>
@@ -333,6 +337,63 @@ class EmailService {
     }
   }
 
+  static async notifyBusinessVerificationStatus(
+    businessName: string,
+    email: string,
+    status: "approved" | "rejected",
+    reason?: string
+  ) {
+    // Define the email content based on status
+    const subject = `Your Business Verification Status: ${
+      status === "approved" ? "Approved" : "Rejected"
+    }`
+    const statusMessage =
+      status === "approved"
+        ? `<p>We are pleased to inform you that your business, <strong>${businessName}</strong>, has been successfully verified and approved.</p>`
+        : `<p>Unfortunately, your business, <strong>${businessName}</strong>, could not be verified at this time.</p>
+           <p><strong>Reason:</strong> ${reason || "Not specified"}</p>`
+
+    const htmlContent = `
+      <html>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; background-color: #f9f9f9; padding: 20px;">
+          <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+            <h2 style="color: #333;">Business Verification ${
+              status === "approved" ? "Approved" : "Rejected"
+            }</h2>
+            <p>Dear Business Owner,</p>
+            ${statusMessage}
+            <p>
+              If you have any questions or need further clarification, please reply to this email or contact our support team.
+            </p>
+            <p style="margin-top: 20px;">Best Regards,<br />The Team</p>
+          </div>
+        </body>
+      </html>
+    `
+
+    // Email details
+    const recipients = [{ name: businessName, email }]
+    const replyTo = {
+      name: "GasByGas Support",
+      email: "mohamedsakirhassan@gmail.com",
+    }
+    const headers = { "X-Priority": "1 (Highest)" }
+
+    try {
+      const emailService = new EmailService()
+      const response = await emailService.sendEmail(
+        subject,
+        htmlContent,
+        recipients,
+        replyTo,
+        headers
+      )
+      console.log("Email sent successfully:", response)
+    } catch (error) {
+      console.error("Failed to send business verification email:", error)
+      throw error
+    }
+  }
   static async sendChangePasswordToken(email: string, token: string) {
     const resetUrl = `http://localhost:3000/auth/change-password?token=${token}&email=${encodeURIComponent(
       email

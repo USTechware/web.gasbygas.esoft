@@ -1,7 +1,7 @@
 import { LoginUserDTO } from "@/app/api/dto/user.dto";
 import { ValidateBody } from "@/app/api/middleware/validator";
 import DatabaseService from "@/app/api/utils/db";
-import User from "@/app/api/models/user.model";
+import User, { IUser } from "@/app/api/models/user.model";
 import "@/app/api/models/outlet.model";
 import { HTTP_STATUS } from "@/constants/common";
 import { NextResponse } from "next/server";
@@ -15,7 +15,7 @@ class LoginController {
         await DatabaseService.connect();
 
         // Find the user by email
-        const user = await User.findOne({ email: payload.email })
+        const user: IUser & { outlet: any} | null = await User.findOne({ email: payload.email })
             .populate('outlet', { name: 1, isActive: 1, _id: 0});
         if (!user) {
             return NextResponse.json(
@@ -61,7 +61,10 @@ class LoginController {
                     outlet: user.outlet,
                     nationalIdNumber: user.nationalIdNumber,
                     phoneNumber: user.phoneNumber,
-                    requestChangePassword: user.requestChangePassword
+                    requestChangePassword: user.requestChangePassword,
+                    company: user.company || undefined,
+                    businessRegId: user.businessRegId || undefined,
+                    businessVerificationStatus: user.businessVerificationStatus || undefined,
                 },
                 token,
             },

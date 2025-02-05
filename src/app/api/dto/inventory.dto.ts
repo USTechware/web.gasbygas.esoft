@@ -1,4 +1,3 @@
-import { GasTypes } from "@/constants/common";
 import { IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
 
 export class CreateInventoryDTO {
@@ -6,8 +5,8 @@ export class CreateInventoryDTO {
     @IsOptional()
     dateAdded?: string;
 
-    @IsString()
-    type?: GasTypes;
+    @IsNotEmpty({ message: "Product Id is required" })
+    productId!: string;
 
     @IsNotEmpty({ message: "Quantity is required" })
     @IsNumber({}, { message: "Quantity must be a number" })

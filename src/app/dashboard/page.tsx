@@ -2,11 +2,12 @@
 
 import AppLayout from '@/components/layouts/AppLayout';
 import DashboardWidget from '@/components/widget';
-import { Building2Icon, CalculatorIcon, CogIcon, ShipIcon, ShoppingCart } from 'lucide-react';
+import { Building2Icon, CalculatorIcon, CogIcon, ShipIcon, ShoppingCart, UserCircle2Icon } from 'lucide-react';
 import useUser from '@/hooks/useUser';
 import useDashboard from '@/hooks/useDashboard';
 import { useMemo } from 'react';
 import CustomerAppLayout from '@/components/layouts/CustomerAppLayout';
+import ProductList from '@/components/ProductList';
 
 export default function Dashboard() {
     const { user, isAdmin, isOutletManager, isCustomer, isBusiness } = useUser();
@@ -18,7 +19,7 @@ export default function Dashboard() {
         }
         return AppLayout
     }, [isCustomer, isBusiness])
-    
+
     return (
         <Layout>
             <div className="bg-gray-100 dark:bg-gray-800">
@@ -38,24 +39,26 @@ export default function Dashboard() {
                                         <DashboardWidget icon={<Building2Icon />} title='Outlets' path='/outlets' children={data.outlets} />
                                         <DashboardWidget icon={<CalculatorIcon />} title='Inventry' path='/inventory' children={data.inventory} />
                                         <DashboardWidget icon={<ShoppingCart />} title='Requests' children={data.requests} />
-                                        <DashboardWidget icon={<ShipIcon />} title='Deliveries'  path='/deliveries' children={data.deliveries} />
+                                        <DashboardWidget icon={<ShipIcon />} title='Deliveries' path='/deliveries' children={data.deliveries} />
+                                        <DashboardWidget icon={<UserCircle2Icon />} title='Customers' path='/customers' children={data.customers} />
                                     </>
-                                    }
-                                    
-                                    {
+                                }
+
+                                {
                                     isOutletManager &&
                                     <>
                                         <DashboardWidget icon={<CalculatorIcon />} title='Stocks' path='/stocks' children={data.stocks} />
                                         <DashboardWidget icon={<ShoppingCart />} title='Requests' path='/requests' children={data.requests} />
-                                        <DashboardWidget icon={<ShipIcon />} title='Deliveries'  path='/deliveries' children={data.deliveries} />
+                                        <DashboardWidget icon={<ShipIcon />} title='Deliveries' path='/deliveries' children={data.deliveries} />
                                     </>
-                                    }
-                                    
-                                    {
+                                }
+
+                                {
                                     (isCustomer || isBusiness) &&
                                     <>
-                                        <DashboardWidget icon={<ShoppingCart />} title='Requests' path='/requests' children={data.requests} />
-                                         </>
+                                            <DashboardWidget icon={<ShoppingCart />} title='Requests' path='/requests' children={data.requests} />
+                                            <ProductList />
+                                    </>
                                 }
                             </div>
                         </div>

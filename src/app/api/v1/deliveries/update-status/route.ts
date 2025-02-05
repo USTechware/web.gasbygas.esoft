@@ -7,7 +7,7 @@ import { NextResponse } from "next/server";
 import { AuthGuard } from "../../../middleware/authenticator";
 import User from "../../../models/user.model";
 import Delivery from "../../../models/deliveries.model";
-import { UpdateDeliveryStatusDTO } from "@/app/api/dto/deliveries.dto";
+import { DeliveryItemDTO, UpdateDeliveryStatusDTO } from "@/app/api/dto/deliveries.dto";
 import { IDelivery } from "@/app/api/models/deliveries.model";
 import { DeliveryStatus } from "@/app/api/types/deliveries";
 import Outlet from "@/app/api/models/outlet.model";
@@ -57,20 +57,19 @@ class DeliveriesController {
         if (payload.status === DeliveryStatus.ARRIVED) {
             // Update Outlet Stock
             const outlet = await Outlet.findById(user.outlet)
-            outlet.currentStock = {
-                [GasTypes.TWO_KG]: (outlet.currentStock?.[GasTypes.TWO_KG] || 0) + (delivery.items?.find((i: any) => i.type === GasTypes.TWO_KG)?.quantity || 0),
-                [GasTypes.FIVE_KG]: (outlet.currentStock?.[GasTypes.FIVE_KG] || 0) + (delivery.items?.find((i: any) => i.type === GasTypes.FIVE_KG)?.quantity || 0),
-                [GasTypes.TWELVE_HALF_KG]: (outlet.currentStock?.[GasTypes.TWELVE_HALF_KG] || 0) + (delivery.items?.find((i: any) => i.type === GasTypes.TWELVE_HALF_KG)?.quantity || 0),
-                [GasTypes.SIXTEEN_KG]: (outlet.currentStock?.[GasTypes.SIXTEEN_KG] || 0) + (delivery.items?.find((i: any) => i.type === GasTypes.SIXTEEN_KG)?.quantity || 0),
-            }
+            delivery.items.forEach((item: DeliveryItemDTO) => {
+                const key = item.productId.toString()
+                outlet.currentStock[key] = (outlet.currentStock[key] || 0) + item.quantity
+            })
             outlet.stockHistory = [...(outlet.stockHistory || []), ...(delivery.items.map((item: any) => (
                 {
                     dateAdded: moment().toISOString(),
-                    type: item.type,
+                    productId: item.productId,
                     quantity: item.quantity
                 }
             )))]
 
+            outlet.markModified('currentStock');
             await outlet.save();
         }
 

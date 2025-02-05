@@ -6,7 +6,8 @@ interface DahboardDataState {
   outlets: number,
   requests: number,
   deliveries: number,
-  stocks: number
+  stocks: number;
+  customers: number;
 }
 
 

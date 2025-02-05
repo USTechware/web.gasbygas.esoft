@@ -1,6 +1,5 @@
 import mongoose, { Schema, Types, Document } from "mongoose";
 import { RequestStatus } from "../types/requests";
-import { GasTypes } from "@/constants/common";
 
 export interface ITimeline {
     date: string;
@@ -14,11 +13,12 @@ export interface IRequest extends Document {
     customerEmail?: String,
     customerPhoneNumber?: String,
     customerAddress?: String,
-    type: GasTypes;
+    productId: Types.ObjectId;
     quantity: Number;
     deadlineForPickup: String
     token: String
     timelines: ITimeline[]
+    total: number;
     status: RequestStatus
 }
 
@@ -34,11 +34,10 @@ const RequestSchema = new mongoose.Schema<IRequest>(
             ref: 'User',
             required: false,
         },
-        type: {
-            type: String,
-            required: true,
-            enum: Object.keys(GasTypes),
-            default: GasTypes.TWO_KG
+        productId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Product',
+            required: false,
         },
         customerName: {
             type: String,
@@ -80,6 +79,10 @@ const RequestSchema = new mongoose.Schema<IRequest>(
                     }
                 }
             ]
+        },
+        total: {
+            type: Number,
+            required: true
         },
         status: {
             type: String,

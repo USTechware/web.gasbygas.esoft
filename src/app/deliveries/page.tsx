@@ -16,7 +16,6 @@ import StatusLabel from '@/components/status';
 import AuthRoleCheck from '@/components/Auth';
 import { DeliveryStatus } from '../api/types/deliveries';
 import useUser from '@/hooks/useUser';
-import { GasTypes, GasTypesValues } from '@/constants/common';
 import { IRequestItem } from '../api/models/deliveries.model';
 import TimelineView from '@/components/Timeline';
 
@@ -25,10 +24,12 @@ function Deliveries() {
     const dispatch = useDispatch<Dispatch>();
     const { user, isOutletManager, isAdmin } = useUser();
     const deliveries = useSelector((state: RootState) => state.deliveries.list);
+    const products = useSelector((state: RootState) => state.products.list);
 
     const [currentDelivery, setCurrentDelivery] = useState<{ id: string, item: any, action: 'timeline' } | null>(null)
 
     useEffect(() => {
+        dispatch.products.fetchProducts();
         dispatch.outlets.fetchOutlets();
         dispatch.deliveries.fetchDeliveries();
     }, [dispatch]);
@@ -38,7 +39,7 @@ function Deliveries() {
     const [isPopupOpen, setIsPopupOpen] = useState(false);
 
     const [item, setItem] = useState<IRequestItem>({
-        type: GasTypes.TWO_KG,
+        productId: products?.[0]?._id,
         quantity: 1
     })
 
@@ -51,7 +52,7 @@ function Deliveries() {
         {
             key: 'order', label: 'Order Items', render: ((delivery: any) => {
                 return delivery.items.map((d: any) => (
-                    <div key={d.type}>{(GasTypesValues as any)[d.type]}: {d.quantity}</div>
+                    <div key={d.productId}>{products?.find(p => p._id === d.productId)?.name}: {d.quantity}</div>
                 ))
             })
         },
@@ -66,7 +67,7 @@ function Deliveries() {
     const handleClosePopup = () => {
         setItem({
             quantity: 1,
-            type: GasTypes.TWO_KG
+            productId: products?.[0]?._id
         });
         setIsPopupOpen(false);
     };
@@ -143,9 +144,9 @@ function Deliveries() {
     }, [user])
 
     const onAddItem = () => {
-        if (item && item.type && item.quantity) {
+        if (item && item.productId && item.quantity) {
             setFormData((prev) => {
-                const existingItemIndex = (prev.items || []).findIndex((i) => i.type === item.type);
+                const existingItemIndex = (prev.items || []).findIndex((i) => String(i.productId) === item.productId);
 
                 if (existingItemIndex !== -1) {
                     return {
@@ -165,10 +166,10 @@ function Deliveries() {
             });
         }
     };
-    const onRemoveItem = (type: GasTypes) => {
+    const onRemoveItem = (productId: string) => {
         setFormData((prev) => ({
             ...prev,
-            items: prev.items.filter((item) => item.type !== type),
+            items: prev.items.filter((item) => item.productId !== productId),
         }));
     };
     return (
@@ -185,8 +186,7 @@ function Deliveries() {
                         />
                     </div>
                 }
-
-                {/* Deliveries Table */}
+                
                 <Table columns={columns} data={deliveries} actions={actions} />
 
                 <Modal isOpen={isPopupOpen} onClose={handleClosePopup}>
@@ -194,8 +194,8 @@ function Deliveries() {
                     <Modal.Content>
                         <div className="mb-2 flex gap-2 justify-between items-end">
                             <Select
-                                options={Object.keys(GasTypes).map((key: string) => ({ label: (GasTypesValues as any)[key], value: key }))}
-                                value={item.type || ''} label='Type' onChange={handleChangeField.bind(null, 'type')} />
+                                options={products.map(p => ({ label: p.name, value: p._id}))}
+                                value={String(item.productId) || ''} label='Product' onChange={handleChangeField.bind(null, 'productId')} />
 
                             <Input
                                 label='Quantity'
@@ -212,17 +212,17 @@ function Deliveries() {
                                 <div className="space-y-2">
                                     {formData.items.map((item) => (
                                         <div
-                                            key={item.type}
+                                            key={item.productId as string}
                                             className="flex items-center justify-between p-2 border rounded-lg bg-gray-50 hover:bg-gray-100"
                                         >
                                             <div>
-                                                <div className="font-medium text-gray-700">{(GasTypesValues as any)[item.type]}</div>
+                                                <div className="font-medium text-gray-700">{ products.find(p => p._id === item.productId)?.name}</div>
                                                 <div className="text-sm text-gray-500">Quantity: {item.quantity}</div>
                                             </div>
                                             <Button
                                                 text=' Remove'
                                                 className="bg-red-500 hover:bg-red-600 rounded-lg shadow-sm"
-                                                onClick={onRemoveItem.bind(null, item.type)}
+                                                onClick={onRemoveItem.bind(null, item.productId as string)}
                                             />
                                         </div>
                                     ))}

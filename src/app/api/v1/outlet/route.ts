@@ -3,13 +3,14 @@ import { ValidateBody } from "@/app/api/middleware/validator";
 import DatabaseService from "@/app/api/utils/db";
 import Outlet, { IOutlet } from "@/app/api/models/outlet.model";
 import User, { IUser } from "@/app/api/models/user.model";
-import { GasTypes, HTTP_STATUS } from "@/constants/common";
+import { HTTP_STATUS } from "@/constants/common";
 import { NextResponse } from "next/server";
 import AuthProvider from "@/app/api/utils/auth";
 import { AuthGuard } from "../../middleware/authenticator";
 import EmailService from "../../lib/EmailService.lib";
 import { FilterQuery } from "mongoose";
 import { UserRole } from "../../types/user";
+import productModel from "../../models/product.model";
 
 class OutletController {
     @AuthGuard()
@@ -75,6 +76,13 @@ class OutletController {
             );
         }
 
+        const products = await productModel.find({});
+
+        const currentStock: Record<string, number> = {}
+
+        products.forEach(p => {
+            currentStock[p._id] = 0
+        })
 
         // Create the outlet
         const outlet = await Outlet.create({
@@ -85,12 +93,7 @@ class OutletController {
             managerName: payload.managerName,
             managerEmail: payload.managerEmail,
             managerPhoneNumber: payload.managerPhoneNumber,
-            currentStock: {
-                [GasTypes.TWO_KG]: 0,
-                [GasTypes.FIVE_KG]: 0,
-                [GasTypes.TWELVE_HALF_KG]: 0,
-                [GasTypes.SIXTEEN_KG]: 0,
-            },
+            currentStock,
             stockHistory: []
         });
 

@@ -4,7 +4,7 @@ import DatabaseService from "@/app/api/utils/db";
 import Delivery from "@/app/api/models/deliveries.model";
 import Outlet, { IOutlet } from "@/app/api/models/outlet.model";
 import Request, { IRequest } from "@/app/api/models/request.model";
-import { GasTypesValues, HTTP_STATUS } from "@/constants/common";
+import { BusinessVerifcationStatus, GasTypesValues, HTTP_STATUS } from "@/constants/common";
 import { NextResponse } from "next/server";
 import { AuthGuard } from "../../middleware/authenticator";
 import { CreateRequestDTO } from "../../dto/requests.dto";
@@ -16,6 +16,7 @@ import { UserRole } from "../../types/user";
 import { FilterQuery } from "mongoose";
 import EmailService from "../../lib/EmailService.lib";
 import { DeliveryStatus } from "../../types/deliveries";
+import Product, { IProduct } from "../../models/product.model";
 
 class RequestsController {
 
@@ -53,7 +54,7 @@ class RequestsController {
         const requests = await Request.find(query)
             .sort({ createdAt: -1 })
             .populate('outlet', {
-            name: 1, district: 1, city: 1
+                name: 1, district: 1, city: 1
             })
             .populate('user', { firstName: 1, lastName: 1, email: 1 });
 
@@ -86,7 +87,23 @@ class RequestsController {
             payload.customerId ? payload.customerId : undefined : userId;
         const outletId = payload.outlet ?? user.outlet;
 
-        const customer = await User.findById(customerId)
+        const customer: IUser | null = await User.findById(customerId)
+
+
+        if (!customer) {
+            return NextResponse.json(
+                { message: "Invalid customer" },
+                { status: HTTP_STATUS.BAD_REQUEST }
+            );
+        }
+        // Check if customer is a Business and verification status
+        if (customer.userRole === UserRole.BUSINESS
+            && customer.businessVerificationStatus !== BusinessVerifcationStatus.VERIFIED) {
+            return NextResponse.json(
+                { message: "Business user not verified yet" },
+                { status: HTTP_STATUS.BAD_REQUEST }
+            );
+        }
 
         // Ensure the outlet exists
         const outletExists: IOutlet | null = await Outlet.findById(outletId);
@@ -104,8 +121,19 @@ class RequestsController {
             );
         }
 
+        const product: IProduct | null = await Product.findById(payload.productId);
+
+        if (!product) {
+            return NextResponse.json(
+                {
+                    message: "Product not found",
+                },
+                { status: HTTP_STATUS.BAD_REQUEST }
+            );
+        }
+
         // Current Stock
-        let availableStock = (outletExists.currentStock as any)[payload.type as any] || 0;
+        let availableStock = (outletExists.currentStock as any)[payload.productId as any] || 0;
 
         // Pending Deliveries for the outlet
         const upcomingDeliveries = (await Delivery.find({
@@ -113,7 +141,7 @@ class RequestsController {
             status: {
                 $nin: [DeliveryStatus.CANCELLED, DeliveryStatus.ARRIVED]
             }
-        }) || []).reduce((c, delivery: any) => c += delivery?.items?.find((i: any) => i.type === payload.type)?.quantity || 0, 0)
+        }) || []).reduce((c, delivery: any) => c += delivery?.items?.find((i: any) => String(i.productId) === payload.productId)?.quantity || 0, 0)
 
         if (upcomingDeliveries) {
             availableStock += upcomingDeliveries
@@ -122,7 +150,7 @@ class RequestsController {
         // Current Requests
         const currentRequests = (await Request.find({
             outlet: outletId,
-            type: payload.type,
+            productId: payload.productId,
             status: RequestStatus.PLACED
         }) || []).reduce((c, request: IRequest) => c += request.quantity, 0)
 
@@ -141,6 +169,7 @@ class RequestsController {
 
         const token = generateRequestToken(outletExists);
         const deadlineForPickup = moment().add(2, 'weeks').toISOString()
+        const total = Number(product.price) * Number(payload.quantity);
         // Create the request
         const newRequest = await Request.create({
             outlet: outletId,
@@ -150,7 +179,7 @@ class RequestsController {
             customerPhoneNumber: !customerId ? payload.customerPhoneNumber : undefined,
             customerAddress: !customerId ? payload.customerAddress : undefined,
             token,
-            type: payload.type,
+            productId: payload.productId,
             quantity: payload.quantity,
             deadlineForPickup,
             timelines: [
@@ -159,6 +188,7 @@ class RequestsController {
                     status: RequestStatus.PLACED
                 }
             ],
+            total: total,
             status: RequestStatus.PLACED
         });
 
@@ -168,14 +198,16 @@ class RequestsController {
         if (customerEmail) {
             process.nextTick(() => {
                 (async () => {
+                    const product = await Product.findById(payload.productId)
                     // Send Email To Customer
                     await EmailService.notifyNewRequest(
                         customerName || 'Customer',
                         customerEmail,
                         token,
                         deadlineForPickup,
-                        (GasTypesValues as any)[payload.type as string],
-                        payload.quantity
+                        product.name,
+                        payload.quantity,
+                        total
                     )
 
                     // Send Email To Outlet
@@ -185,8 +217,9 @@ class RequestsController {
                         outletExists.managerEmail,
                         token,
                         deadlineForPickup,
-                        (GasTypesValues as any)[payload.type as string],
-                        payload.quantity
+                        product.name,
+                        payload.quantity,
+                        total
                     )
                 })()
             })

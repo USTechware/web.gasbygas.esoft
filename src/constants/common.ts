@@ -32,3 +32,9 @@ export const GasTypesValues = {
     TWELVE_HALF_KG: '12.5 Kg',
     SIXTEEN_KG: '16 Kg',
 }
+
+export enum BusinessVerifcationStatus {
+    PENDING = 'PENDING',
+    VERIFIED = 'VERIFIED',
+    DENIED = 'DENIED',
+}

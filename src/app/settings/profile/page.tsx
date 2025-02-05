@@ -14,6 +14,7 @@ import useUser from '@/hooks/useUser';
 import AreasList from '../../../../public/areas.json';
 import Select from '@/components/subcomponents/select';
 import CustomerAppLayout from '@/components/layouts/CustomerAppLayout';
+import FileUploader from '@/components/subcomponents/file';
 
 const ErrorFields = {
     firstName: '',
@@ -21,7 +22,8 @@ const ErrorFields = {
     address: '',
     city: '',
     district: '',
-    phoneNumber: ''
+    phoneNumber: '',
+    businessVerificationDoc: ''
 }
 
 const DistrictsList = Object.keys(AreasList).map((d) => ({ label: d, value: d }));
@@ -44,6 +46,7 @@ function ChangePassword() {
         city: user?.city || '',
         district: user?.district || '',
         phoneNumber: user?.phoneNumber || '',
+        businessVerificationDoc: user?.businessVerificationDoc || '',
     });
     const [formErrors, setFormErrors] = useState(ErrorFields);
     const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -183,15 +186,33 @@ function ChangePassword() {
                     </div>
                     {
                         isBusiness ?
-                            <div className="mb-4">
-                                <Input
-                                    id="businessRegId"
-                                    type="text"
-                                    value={user?.businessRegId || ''}
-                                    label="Business Registration Id"
-                                    disabled
-                                />
-                            </div> :
+                            <>
+                                <div className="mb-4">
+                                    <Input
+                                        id="company"
+                                        type="text"
+                                        value={user?.company || ''}
+                                        label="Company"
+                                        disabled
+                                    />
+                                </div>
+                                <div className="mb-4">
+                                    <Input
+                                        id="businessRegId"
+                                        type="text"
+                                        value={user?.businessRegId || ''}
+                                        label="Business Registration Id"
+                                        disabled
+                                    />
+                                </div>
+                                <div className="mb-4">
+                                    <FileUploader label='Business Verification Doc'
+                                        fileUrl={formData.businessVerificationDoc || ''}
+                                        error={formErrors.businessVerificationDoc}
+                                        setFileUrl={handleChangeField.bind(null, 'businessVerificationDoc')}
+                                    />
+                                </div>
+                            </> :
                             isCustomer ?
                                 <div className="mb-4">
                                     <Input
@@ -203,7 +224,7 @@ function ChangePassword() {
                                     />
                                 </div> : null
                     }
-                     <div className="mb-4">
+                    <div className="mb-4">
                         <Input
                             id="phoneNumber"
                             type="text"
