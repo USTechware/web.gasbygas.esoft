@@ -54,6 +54,12 @@ class ResetPasswordController {
 
       const encryptPassword = await AuthProvider.encryptPassword(newPassword)
 
+      if (!encryptPassword) {
+        return NextResponse.json({
+          message: "Failed to encrypt password",
+        })
+      }
+
       user.password = encryptPassword
       await user.save()
 
