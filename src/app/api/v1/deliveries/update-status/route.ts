@@ -3,7 +3,7 @@ import { ValidateBody } from "@/app/api/middleware/validator";
 import DatabaseService from "@/app/api/utils/db";
 import Request, { IRequest } from "@/app/api/models/request.model";
 import { GasTypes, HTTP_STATUS } from "@/constants/common";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { AuthGuard } from "../../../middleware/authenticator";
 import User from "../../../models/user.model";
 import Delivery from "../../../models/deliveries.model";
@@ -19,7 +19,7 @@ class DeliveriesController {
 
     @AuthGuard()
     @ValidateBody(UpdateDeliveryStatusDTO)
-    async PUT(req: Request) {
+    async PUT(req: NextRequest) {
         await DatabaseService.connect();
 
         const userId = (req as any).userId;
@@ -139,7 +139,7 @@ class DeliveriesController {
     }
 }
 
-export const PUT = async (req: Request, res: Response) => {
+export const PUT = async (req: NextRequest) => {
     const controller = new DeliveriesController();
     try {
         return await controller.PUT(req);

@@ -1,18 +1,11 @@
 
 import { ValidateBody } from "@/app/api/middleware/validator";
 import DatabaseService from "@/app/api/utils/db";
-import Request, { IRequest } from "@/app/api/models/request.model";
-import { BusinessVerifcationStatus, GasTypes, HTTP_STATUS } from "@/constants/common";
-import { NextResponse } from "next/server";
+import Request from "@/app/api/models/request.model";
+import { BusinessVerifcationStatus, HTTP_STATUS } from "@/constants/common";
+import { NextRequest, NextResponse } from "next/server";
 import { AuthGuard } from "../../../../middleware/authenticator";
 import User from "../../../../models/user.model";
-import Delivery from "../../../../models/deliveries.model";
-import { DeliveryItemDTO, UpdateDeliveryStatusDTO } from "@/app/api/dto/deliveries.dto";
-import { IDelivery } from "@/app/api/models/deliveries.model";
-import { DeliveryStatus } from "@/app/api/types/deliveries";
-import Outlet from "@/app/api/models/outlet.model";
-import moment from "moment";
-import { RequestStatus } from "@/app/api/types/requests";
 import EmailService from "@/app/api/lib/EmailService.lib";
 import { UpdateBusinessStatusDTO } from "@/app/api/dto/user.dto";
 
@@ -74,7 +67,7 @@ class DeliveriesController {
     }
 }
 
-export const PUT = async (req: Request, res: Response) => {
+export const PUT = async (req: NextRequest) => {
     const controller = new DeliveriesController();
     try {
         return await controller.PUT(req);

@@ -3,14 +3,14 @@ import { ValidateBody } from "@/app/api/middleware/validator";
 import DatabaseService from "@/app/api/utils/db";
 import Inventory from "@/app/api/models/inventory.model";
 import { GasTypes, HTTP_STATUS } from "@/constants/common";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { CreateInventoryDTO } from "../../dto/inventory.dto";
 import { AuthGuard } from "../../middleware/authenticator";
 import productModel, { IProduct } from "../../models/product.model";
 
 class OutletController {
     @AuthGuard()
-    async GET(req: Request) {
+    async GET(req: NextRequest) {
         try {
             await DatabaseService.connect();
 
@@ -36,7 +36,7 @@ class OutletController {
     }
     @AuthGuard()
     @ValidateBody(CreateInventoryDTO)
-    async POST(req: Request) {
+    async POST(req: NextRequest) {
         await DatabaseService.connect();
         const payload: CreateInventoryDTO = (req as any).payload;
 
@@ -84,7 +84,7 @@ class OutletController {
     }
 }
 
-export const POST = async (req: Request, res: Response) => {
+export const POST = async (req: NextRequest) => {
     const controller = new OutletController();
     try {
         return await controller.POST(req);
@@ -101,7 +101,7 @@ export const POST = async (req: Request, res: Response) => {
 };
 
 
-export const GET = async (req: Request, res: Response) => {
+export const GET = async (req: NextRequest) => {
     const controller = new OutletController();
     try {
         return await controller.GET(req);

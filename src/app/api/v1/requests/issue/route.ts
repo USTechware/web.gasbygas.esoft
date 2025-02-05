@@ -5,7 +5,7 @@ import Delivery, { IDelivery } from "@/app/api/models/deliveries.model";
 import Outlet, { IOutlet } from "@/app/api/models/outlet.model";
 import Request, { IRequest } from "@/app/api/models/request.model";
 import { HTTP_STATUS } from "@/constants/common";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { AuthGuard } from "../../../middleware/authenticator";
 import { CreateRequestDTO, UpdateRequestStatusDTO } from "../../../dto/requests.dto";
 import { RequestStatus } from "../../../types/requests";
@@ -17,7 +17,7 @@ class RequestsController {
 
     @AuthGuard()
     @ValidateBody(UpdateRequestStatusDTO)
-    async PUT(req: Request) {
+    async PUT(req: NextRequest) {
         await DatabaseService.connect();
 
         const userId = (req as any).userId;
@@ -78,7 +78,7 @@ class RequestsController {
     }
 }
 
-export const PUT = async (req: Request, res: Response) => {
+export const PUT = async (req: NextRequest) => {
     const controller = new RequestsController();
     try {
         return await controller.PUT(req);

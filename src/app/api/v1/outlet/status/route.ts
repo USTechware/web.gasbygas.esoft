@@ -2,13 +2,13 @@ import DatabaseService from "@/app/api/utils/db";
 import Outlet from "@/app/api/models/outlet.model";
 import User, { IUser } from "@/app/api/models/user.model";
 import { HTTP_STATUS } from "@/constants/common";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { AuthGuard } from "../../../middleware/authenticator";
 import { UserRole } from "@/app/api/types/user";
 
 class OutletController {
     @AuthGuard()
-    async PUT(req: Request) {
+    async PUT(req: NextRequest) {
         await DatabaseService.connect();
 
         const userId = (req as any).userId;
@@ -50,7 +50,7 @@ class OutletController {
 }
 
 // API route handler for the PUT request
-export const PUT = async (req: Request, res: Response) => {
+export const PUT = async (req: NextRequest) => {
     const controller = new OutletController();
     try {
         return await controller.PUT(req);

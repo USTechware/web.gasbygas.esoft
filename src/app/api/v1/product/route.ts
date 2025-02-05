@@ -1,13 +1,13 @@
 
 import DatabaseService from "@/app/api/utils/db";
 import { HTTP_STATUS } from "@/constants/common";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { AuthGuard } from "../../middleware/authenticator";
 import Product from "../../models/product.model";
 
 class ProductController {
     @AuthGuard()
-    async GET(req: Request) {
+    async GET(req: NextRequest) {
         try {
             await DatabaseService.connect();
 
@@ -26,7 +26,7 @@ class ProductController {
     }
 }
 
-export const GET = async (req: Request, res: Response) => {
+export const GET = async (req: NextRequest) => {
     const controller = new ProductController();
     try {
         return await controller.GET(req);

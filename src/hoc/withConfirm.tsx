@@ -15,7 +15,7 @@ interface IPopup {
 const withConfirm = (WrappedComponent: any) => {
     return function WithConfirmWrapper(props: any) {
 
-        const [popup, setPoup] = useState<IPopup>({
+        const [popup, setPopup] = useState<IPopup>({
             open: false,
             message: 'Are you sure?',
             actionLabel: 'Confirm',
@@ -26,11 +26,11 @@ const withConfirm = (WrappedComponent: any) => {
             if (popup.onConfirm && typeof popup.onConfirm === 'function') {
                 popup.onConfirm();
             }
-            setPoup(popup => ({ ...popup, open: false }))
-        }, [popup.onConfirm]);
+            setPopup(popup => ({ ...popup, open: false }))
+        }, [popup]);
 
         const openConfirm = ({ message, actionLabel, onConfirm }: { message?: string, actionLabel?: string, onConfirm: () => void }) => {
-            setPoup(popup => ({
+            setPopup(popup => ({
                 ...popup,
                 open: true,
                 message: message ?? popup.message,
@@ -48,7 +48,7 @@ const withConfirm = (WrappedComponent: any) => {
                             <h2 className="text-lg font-bold">Confirmation</h2>
                             <p className="text-gray-700 mt-2">{popup.message}</p>
                             <div className="flex justify-end mt-4 space-x-2">
-                                <Button variant='outline' onClick={() => setPoup(popup => ({ ...popup, open: false }))} text='Cancel' />
+                                <Button variant='outline' onClick={() => setPopup(popup => ({ ...popup, open: false }))} text='Cancel' />
                                 <Button variant='solid' onClick={handleConfirm} text={popup.actionLabel} />
                             </div>
                         </div>

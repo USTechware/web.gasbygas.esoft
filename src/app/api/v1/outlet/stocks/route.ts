@@ -2,12 +2,12 @@ import DatabaseService from "@/app/api/utils/db";
 import Outlet from "@/app/api/models/outlet.model";
 import User from "@/app/api/models/user.model";
 import { HTTP_STATUS } from "@/constants/common";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { AuthGuard } from "../../../middleware/authenticator";
 
 class OutletController {
     @AuthGuard()
-    async GET(req: Request) {
+    async GET(req: NextRequest) {
 
         await DatabaseService.connect();
 
@@ -41,7 +41,7 @@ class OutletController {
     }
 }
 
-export const GET = async (req: Request, res: Response) => {
+export const GET = async (req: NextRequest) => {
     const controller = new OutletController();
     try {
         return await controller.GET(req);

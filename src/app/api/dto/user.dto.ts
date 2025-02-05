@@ -1,5 +1,5 @@
 import { BusinessVerifcationStatus } from "@/constants/common";
-import { IsEmail, IsEmpty, IsEnum, IsMongoId, IsNotEmpty, IsOptional, IsString, MinLength } from "class-validator";
+import { IsEmail, IsEnum, IsMongoId, IsNotEmpty, IsOptional, IsString, MinLength } from "class-validator";
 
 export class RegisterUserDTO {
     @IsNotEmpty({ message: "First Name is required" })

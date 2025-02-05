@@ -3,7 +3,7 @@ import { ValidateBody } from "@/app/api/middleware/validator";
 import DatabaseService from "@/app/api/utils/db";
 import User from "@/app/api/models/user.model";
 import { HTTP_STATUS } from "@/constants/common";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import AuthProvider from "@/app/api/utils/auth";
 import { AuthGuard } from "@/app/api/middleware/authenticator";
 
@@ -53,7 +53,7 @@ class ChangePasswordController {
     }
 }
 
-export const POST = async (req: Request, res: Response) => {
+export const POST = async (req: NextRequest) => {
     const controller = new ChangePasswordController();
     try {
         return await controller.POST(req);

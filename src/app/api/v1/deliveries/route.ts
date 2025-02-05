@@ -3,7 +3,7 @@ import { ValidateBody } from "@/app/api/middleware/validator";
 import DatabaseService from "@/app/api/utils/db";
 import Delivery from "@/app/api/models/deliveries.model";
 import { HTTP_STATUS } from "@/constants/common";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { CreateDeliveryDTO } from "../../dto/deliveries.dto";
 import Outlet from "../../models/outlet.model";
 import { DeliveryStatus } from "../../types/deliveries";
@@ -16,7 +16,7 @@ import moment from "moment";
 
 class DeliveriesController {
     @AuthGuard()
-    async GET(req: Request) {
+    async GET(req: NextRequest) {
 
         const userId = (req as any).userId;
         const user: IUser | null = await User.findById(userId);
@@ -114,7 +114,7 @@ class DeliveriesController {
     }
 }
 
-export const POST = async (req: Request, res: Response) => {
+export const POST = async (req: NextRequest) => {
     const controller = new DeliveriesController();
     try {
         return await controller.POST(req);
@@ -131,7 +131,7 @@ export const POST = async (req: Request, res: Response) => {
 };
 
 
-export const GET = async (req: Request, res: Response) => {
+export const GET = async (req: NextRequest) => {
     const controller = new DeliveriesController();
     try {
         return await controller.GET(req);

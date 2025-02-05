@@ -28,14 +28,14 @@ const Select: React.FC<SelectProps> = ({
   const [isOpen, setIsOpen] = useState(false);
 
   const filteredOptions = options.filter((option) => {
-    let search = searchQuery.toLocaleLowerCase()
+    const search = searchQuery.toLocaleLowerCase()
     return option.label.toLowerCase().includes(search)
   }
 
   );
 
   const restOptions = options.filter((option) => {
-    let search = searchQuery.toLocaleLowerCase()
+    const search = searchQuery.toLocaleLowerCase()
     return !option.label.toLowerCase().includes(search)
   }
   );

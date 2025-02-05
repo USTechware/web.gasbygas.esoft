@@ -1,4 +1,3 @@
-import { UserRole } from "@/app/api/types/user";
 import { Dispatch, RootState } from "@/data"
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux"

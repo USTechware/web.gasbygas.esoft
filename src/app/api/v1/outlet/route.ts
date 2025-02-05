@@ -4,7 +4,7 @@ import DatabaseService from "@/app/api/utils/db";
 import Outlet, { IOutlet } from "@/app/api/models/outlet.model";
 import User, { IUser } from "@/app/api/models/user.model";
 import { HTTP_STATUS } from "@/constants/common";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import AuthProvider from "@/app/api/utils/auth";
 import { AuthGuard } from "../../middleware/authenticator";
 import EmailService from "../../lib/EmailService.lib";
@@ -14,7 +14,7 @@ import productModel from "../../models/product.model";
 
 class OutletController {
     @AuthGuard()
-    async GET(req: Request) {
+    async GET(req: NextRequest) {
         await DatabaseService.connect();
 
         const userId = (req as any).userId;
@@ -49,7 +49,7 @@ class OutletController {
     }
     @AuthGuard()
     @ValidateBody(CreateOutletDTO)
-    async POST(req: Request) {
+    async POST(req: NextRequest) {
         await DatabaseService.connect();
         const payload: CreateOutletDTO = (req as any).payload;
 
@@ -140,7 +140,7 @@ class OutletController {
     }
 }
 
-export const POST = async (req: Request, res: Response) => {
+export const POST = async (req: NextRequest) => {
     const controller = new OutletController();
     try {
         return await controller.POST(req);
@@ -158,7 +158,7 @@ export const POST = async (req: Request, res: Response) => {
 };
 
 
-export const GET = async (req: Request, res: Response) => {
+export const GET = async (req: NextRequest) => {
     const controller = new OutletController();
     try {
         return await controller.GET(req);

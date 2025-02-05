@@ -24,6 +24,7 @@ function Customers({ openConfirm }: IWithConfirmProps) {
 
     useEffect(() => {
         dispatch.customers.fetchCustomers();
+        // @ts-ignore react-hooks/exhaustive-deps
     }, [])
 
     const columns = [

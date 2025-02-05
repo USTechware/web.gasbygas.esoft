@@ -4,13 +4,13 @@ import { ValidateBody } from "@/app/api/middleware/validator";
 import DatabaseService from "@/app/api/utils/db";
 import User from "@/app/api/models/user.model";
 import { BusinessVerifcationStatus, HTTP_STATUS } from "@/constants/common";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import AuthProvider from "@/app/api/utils/auth";
 import { UserRole } from "@/app/api/types/user";
 
 class RegisterController {
     @ValidateBody(RegisterUserDTO)
-    async POST(req: Request) {
+    async POST(req: NextRequest) {
         await DatabaseService.connect();
         const payload: RegisterUserDTO = (req as any).payload;
 
@@ -78,7 +78,7 @@ class RegisterController {
     }
 }
 
-export const POST = async (req: Request, res: Response) => {
+export const POST = async (req: NextRequest) => {
     const controller = new RegisterController();
     try {
         return await controller.POST(req);

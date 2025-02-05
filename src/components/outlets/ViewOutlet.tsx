@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import Modal from '../modal';
 import Button from '../subcomponents/button';
-import { useDispatch } from 'react-redux';
-import { Dispatch } from '@/data';
-import { GasTypesValues } from '@/constants/common';
+import { useDispatch, useSelector } from 'react-redux';
+import { Dispatch, RootState } from '@/data';
 
 function ViewOutlet({ id, onClose }: { id: string; onClose: () => void }) {
     const [outlet, setOutlet] = useState<any>(null);
     const dispatch = useDispatch<Dispatch>();
+    const products = useSelector((state: RootState) => state.products.list)
 
     useEffect(() => {
         if (id) {
@@ -90,7 +90,7 @@ function ViewOutlet({ id, onClose }: { id: string; onClose: () => void }) {
                                 <div className='w-full'>
                                     {
                                         Object.entries(outlet.stocks?.current || {}).map((item: any, idx) => (
-                                            <div key={idx} className=' flex justify-between'><span>{(GasTypesValues as any)[item[0]]}</span> <span>{item[1]}</span></div>
+                                            <div key={idx} className=' flex justify-between'><span>{products.find(p => p._id === item[0])?.name + ' Gas' || 'Product'}</span> <span className='ml-2'>{item[1]}</span></div>
                                         ))
                                     }
                                 </div>

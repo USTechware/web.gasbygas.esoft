@@ -9,7 +9,6 @@ export function AuthGuard(){
         descriptor.value = async function (...args: any) {
 
             const req: NextRequest = args[0];
-            const res: NextResponse = args[0];
             const headers = req.headers;
 
             const Authorization = headers.get('authorization')

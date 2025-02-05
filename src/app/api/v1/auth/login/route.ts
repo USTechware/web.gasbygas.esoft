@@ -4,7 +4,7 @@ import DatabaseService from "@/app/api/utils/db";
 import User, { IUser } from "@/app/api/models/user.model";
 import "@/app/api/models/outlet.model";
 import { HTTP_STATUS } from "@/constants/common";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import AuthProvider from "@/app/api/utils/auth";
 
 class LoginController {
@@ -73,7 +73,7 @@ class LoginController {
     }
 }
 
-export const POST = async (req: Request, res: Response) => {
+export const POST = async (req: NextRequest) => {
     const controller = new LoginController();
     try {
         return await controller.POST(req);
