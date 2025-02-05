@@ -394,8 +394,9 @@ class EmailService {
       throw error
     }
   }
+
   static async sendChangePasswordToken(email: string, token: string) {
-    const resetUrl = `http://localhost:3000/auth/change-password?token=${token}&email=${encodeURIComponent(
+    const resetUrl = `http://localhost:3000/auth/reset-password?token=${token}&email=${encodeURIComponent(
       email
     )}`
 

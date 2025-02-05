@@ -4,23 +4,25 @@ import AuthProvider from "@/app/api/utils/auth"
 import DatabaseService from "@/app/api/utils/db"
 import { HTTP_STATUS } from "@/constants/common"
 import dayjs from "dayjs"
-import { NextApiRequest } from "next"
 import { NextResponse } from "next/server"
 
 class ForgotPasswordController {
-  async GET(req: NextApiRequest) {
+  async GET(req: Request) {
     await DatabaseService.connect()
 
     try {
-      const { token, email } = req.query as { token: string; email: string }
-
-      console.log(token, email)
+      const { searchParams } = new URL(req.url)
+      const token = searchParams.get("token") || ""
+      const email = searchParams.get("email") || ""
 
       if (!token || !email) {
-        return NextResponse.json({
-          message: "Token and email are required",
-          status: HTTP_STATUS.BAD_REQUEST,
-        })
+        return NextResponse.json(
+          {
+            message: "Token and email are required",
+            status: HTTP_STATUS.BAD_REQUEST,
+          },
+          { status: HTTP_STATUS.BAD_REQUEST }
+        )
       }
 
       const resetPasswordReq = await resetPasswordModel.findOne({
@@ -29,26 +31,40 @@ class ForgotPasswordController {
       })
 
       if (!resetPasswordReq) {
-        return NextResponse.json({
-          message: "Invalid token or email",
-          status: HTTP_STATUS.BAD_REQUEST,
-        })
+        return NextResponse.json(
+          {
+            message: "Invalid token or email",
+            status: HTTP_STATUS.BAD_REQUEST,
+          },
+          { status: HTTP_STATUS.BAD_REQUEST }
+        )
       }
 
       if (dayjs().isAfter(resetPasswordReq.expires_at)) {
-        return { error: "Token has expired. Please request a new one." }
+        return NextResponse.json(
+          {
+            message: "Token has expired. Please request a new one.",
+            status: HTTP_STATUS.BAD_REQUEST,
+          },
+          { status: HTTP_STATUS.BAD_REQUEST }
+        )
       }
 
-      return NextResponse.redirect(
-        `http://localhost:3000/auth/change-password?token=${token}&email=${encodeURIComponent(
-          email
-        )}`
+      return NextResponse.json(
+        {
+          message: "Token is valid",
+          status: HTTP_STATUS.OK,
+        },
+        { status: HTTP_STATUS.OK }
       )
     } catch (error) {
-      return NextResponse.json({
-        message: "Invalid request body",
-        status: HTTP_STATUS.BAD_REQUEST,
-      })
+      return NextResponse.json(
+        {
+          message: "Invalid request",
+          status: HTTP_STATUS.BAD_REQUEST,
+        },
+        { status: HTTP_STATUS.BAD_REQUEST }
+      )
     }
   }
 
@@ -96,7 +112,7 @@ class ForgotPasswordController {
   }
 }
 
-export const GET = async (req: NextApiRequest, res: Response) => {
+export const GET = async (req: Request, res: Response) => {
   const controller = new ForgotPasswordController()
   try {
     await controller.GET(req)

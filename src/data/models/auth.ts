@@ -50,6 +50,11 @@ interface IChangePasswordPayload {
   newPassword: string
 }
 
+interface IResetpasswordPayload {
+  newPassword?: string
+  confirmPassword?: string
+}
+
 interface IUpdateUserPayload {
   firstName: string
   lastName: string
@@ -108,10 +113,13 @@ export const auth = {
     async register(payload: IRegisterPayload) {
       await client.post("/api/v1/auth/register", payload)
     },
-    async forgotPassword(payload: { email: string }) {
-      const { email } = payload
-      console.log(email)
-      const result = await client.post("/api/v1/auth/forgot-password", email)
+    async forgotPassword(payload: { userEmail: string }) {
+      const { userEmail } = payload
+      console.log(userEmail)
+      const result = await client.post(
+        "/api/v1/auth/forgot-password",
+        userEmail
+      )
       // if (result.status === HTTP_STATUS.OK) {
       //   return result.data
       // }
@@ -121,6 +129,17 @@ export const auth = {
       if (result.status === HTTP_STATUS.OK) {
         dispatch.auth.updateUser({ requestChangePassword: false })
         return result.data
+      }
+    },
+
+    async resetPassword(payload: IResetpasswordPayload) {
+      const result = await client.post("/api/v1/auth/reset-password", payload)
+      if (result.status === HTTP_STATUS.OK) {
+        dispatch.auth.updateUser({ requestChangePassword: false })
+        console.log(result.data)
+        return { success: true, data: result.data }
+      } else {
+        return { success: false, data: result.data }
       }
     },
 
