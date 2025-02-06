@@ -135,7 +135,7 @@ export const auth = {
     async resetPassword(payload: IResetpasswordPayload) {
       const result = await client.post("/api/v1/auth/reset-password", payload)
       if (result.status === HTTP_STATUS.OK) {
-        dispatch.auth.updateUser(payload)
+        // dispatch.auth.updateUser(payload)
         console.log(result.data)
         return { success: true, data: result.data }
       } else {
