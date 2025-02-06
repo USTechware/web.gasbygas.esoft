@@ -12,21 +12,23 @@ interface IPopup {
     onConfirm: (() => void )| null
 }
 
+const DefaultProps = {
+    open: false,
+    message: 'Are you sure?',
+    actionLabel: 'Confirm',
+    onConfirm: null
+}
+
 const withConfirm = (WrappedComponent: any) => {
     return function WithConfirmWrapper(props: any) {
 
-        const [popup, setPopup] = useState<IPopup>({
-            open: false,
-            message: 'Are you sure?',
-            actionLabel: 'Confirm',
-            onConfirm: null
-        })
+        const [popup, setPopup] = useState<IPopup>(DefaultProps)
 
         const handleConfirm = useCallback(() => {
             if (popup.onConfirm && typeof popup.onConfirm === 'function') {
                 popup.onConfirm();
             }
-            setPopup(popup => ({ ...popup, open: false }))
+            setPopup(popup => ({ ...DefaultProps }))
         }, [popup]);
 
         const openConfirm = ({ message, actionLabel, onConfirm }: { message?: string, actionLabel?: string, onConfirm: () => void }) => {
