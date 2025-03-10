@@ -1,4 +1,4 @@
-import mongoose, { Schema, Types, Document } from "mongoose";
+import mongoose, { Types, Document } from "mongoose";
 import { RequestStatus } from "../types/requests";
 
 export interface ITimeline {

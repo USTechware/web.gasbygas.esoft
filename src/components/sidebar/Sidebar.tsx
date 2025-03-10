@@ -25,7 +25,7 @@ export default function Sidebar() {
     const { isAdmin, isOutletManager } = useUser();
 
     useEffect(() => {
-        let menu: NavItem[] = [
+        const menu: NavItem[] = [
             { name: 'Dashboard', href: '/dashboard', icon: <LayoutDashboardIcon className="w-6 h-6" /> },
         ]
 

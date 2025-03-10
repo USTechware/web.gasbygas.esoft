@@ -5,7 +5,7 @@ import User from "@/app/api/models/user.model"
 import AuthProvider from "@/app/api/utils/auth"
 import DatabaseService from "@/app/api/utils/db"
 import { HTTP_STATUS } from "@/constants/common"
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 
 class ChangePasswordController {
   @AuthGuard()
@@ -57,7 +57,7 @@ class ChangePasswordController {
   }
 }
 
-export const POST = async (req: Request, res: Response) => {
+export const POST = async (req: NextRequest) => {
   const controller = new ChangePasswordController()
   try {
     return await controller.POST(req)

@@ -1,10 +1,14 @@
-import brevo, { TransactionalEmailsApiApiKeys } from "@getbrevo/brevo"
+import {
+  SendSmtpEmail,
+  TransactionalEmailsApi,
+  TransactionalEmailsApiApiKeys,
+} from "@getbrevo/brevo"
 
 class EmailService {
-  private apiInstance: brevo.TransactionalEmailsApi
+  private apiInstance: TransactionalEmailsApi
 
   constructor() {
-    this.apiInstance = new brevo.TransactionalEmailsApi()
+    this.apiInstance = new TransactionalEmailsApi()
     this.apiInstance.setApiKey(
       TransactionalEmailsApiApiKeys.apiKey,
       String(process.env.BREVO_EMAIL_API_KEY)
@@ -31,7 +35,7 @@ class EmailService {
     params?: Record<string, any>
   ): Promise<any> {
     // Create an instance of the email object
-    const sendSmtpEmail = new brevo.SendSmtpEmail()
+    const sendSmtpEmail = new SendSmtpEmail()
 
     // Populate the email details
     sendSmtpEmail.subject = subject

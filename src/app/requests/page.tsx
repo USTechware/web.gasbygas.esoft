@@ -27,8 +27,9 @@ import TimelineView from '@/components/Timeline';
 import CustomerAppLayout from '@/components/layouts/CustomerAppLayout';
 import Num from '../api/utils/num';
 import { useRouter, useSearchParams } from 'next/navigation';
+import withConfirm, { IWithConfirmProps } from '@/hoc/withConfirm';
 
-function Requests() {
+function Requests({ openConfirm }: IWithConfirmProps) {
     const dispatch = useDispatch<Dispatch>();
 
     const params = useSearchParams();
@@ -227,28 +228,44 @@ function Requests() {
 
 
     const handleIssueRequest = async (item: any) => {
-        try {
-            const data = await dispatch.requests.issueRequest({ _id: item._id });
-            toast.success(data?.message || "Request has been issued successfully");
-            dispatch.requests.fetchRequests();
-            handleClosePopup();
-        } catch (error: any) {
-            toast.error(error?.response?.data?.message || "Unknown error occurred!");
-            console.log('Create delivery failed:', error);
-        }
+        openConfirm({
+            message: `Are you sure to issue this request?`,
+            actionLabel: 'Confirm',
+            onConfirm: () => {
+                (async () => {
+                    try {
+                        const data = await dispatch.requests.issueRequest({ _id: item._id });
+                        toast.success(data?.message || "Request has been issued successfully");
+                        dispatch.requests.fetchRequests();
+                        handleClosePopup();
+                    } catch (error: any) {
+                        toast.error(error?.response?.data?.message || "Unknown error occurred!");
+                        console.log('Create delivery failed:', error);
+                    }
+                })()
+            }
+        })
     }
 
 
     const handleCancelRequest = async (item: any) => {
-        try {
-            const data = await dispatch.requests.cancelRequest({ _id: item._id });
-            toast.success(data?.message || "Request has been cancelled successfully");
-            dispatch.requests.fetchRequests();
-            handleClosePopup();
-        } catch (error: any) {
-            toast.error(error?.response?.data?.message || "Unknown error occurred!");
-            console.log('Cancel delivery failed:', error);
-        }
+        openConfirm({
+            message: `Are you sure to cancel this request?`,
+            actionLabel: 'Confirm',
+            onConfirm: () => {
+                (async () => {
+                    try {
+                        const data = await dispatch.requests.cancelRequest({ _id: item._id });
+                        toast.success(data?.message || "Request has been cancelled successfully");
+                        dispatch.requests.fetchRequests();
+                        handleClosePopup();
+                    } catch (error: any) {
+                        toast.error(error?.response?.data?.message || "Unknown error occurred!");
+                        console.log('Cancel delivery failed:', error);
+                    }
+                })()
+            }
+        })
     }
 
     const handleResceduleRequest = async (item: any) => {
@@ -260,15 +277,23 @@ function Requests() {
     }
 
     const handleExpireRequest = async (item: any) => {
-        try {
-            const data = await dispatch.requests.expireRequest({ _id: item._id });
-            toast.success(data?.message || "Request has been expired successfully");
-            dispatch.requests.fetchRequests();
-            handleClosePopup();
-        } catch (error: any) {
-            toast.error(error?.response?.data?.message || "Unknown error occurred!");
-            console.log('Create delivery failed:', error);
-        }
+        openConfirm({
+            message: `Are you sure to expire this request?`,
+            actionLabel: 'Confirm',
+            onConfirm: () => {
+                (async () => {
+                    try {
+                        const data = await dispatch.requests.expireRequest({ _id: item._id });
+                        toast.success(data?.message || "Request has been expired successfully");
+                        dispatch.requests.fetchRequests();
+                        handleClosePopup();
+                    } catch (error: any) {
+                        toast.error(error?.response?.data?.message || "Unknown error occurred!");
+                        console.log('Create delivery failed:', error);
+                    }
+                })()
+            }
+        })
     }
 
     const handleViewCustomer = async (item: any) => {
@@ -500,4 +525,4 @@ function Requests() {
     );
 }
 
-export default AuthRoleCheck(Requests, { roles: [UserRole.BUSINESS, UserRole.CUSTOMER, UserRole.OUTLET_MANAGER] })
+export default AuthRoleCheck(withConfirm(Requests), { roles: [UserRole.BUSINESS, UserRole.CUSTOMER, UserRole.OUTLET_MANAGER] })

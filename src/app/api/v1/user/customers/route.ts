@@ -1,13 +1,13 @@
 import DatabaseService from "@/app/api/utils/db";
 import User from "@/app/api/models/user.model";
 import { HTTP_STATUS } from "@/constants/common";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { AuthGuard } from "@/app/api/middleware/authenticator";
 import { UserRole } from "@/app/api/types/user";
 
 class Controller {
     @AuthGuard()
-    async get(req: Request) {
+    async get(req: NextRequest) {
         const userId = (req as any).userId;
 
         const user = await User.findById(userId);
@@ -51,7 +51,7 @@ class Controller {
     }
 }
 
-export const GET = async (req: Request, res: Response) => {
+export const GET = async (req: NextRequest) => {
     const controller = new Controller();
     try {
         return await controller.get(req);

@@ -2,14 +2,14 @@ import DatabaseService from "@/app/api/utils/db";
 import Outlet from "@/app/api/models/outlet.model";
 import User from "@/app/api/models/user.model";
 import { HTTP_STATUS } from "@/constants/common";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { AuthGuard } from "../../../middleware/authenticator";
 import Requests from "@/app/api/models/request.model";
 import { RequestStatus } from "@/app/api/types/requests";
 
 class OutletController {
     @AuthGuard()
-    async POST(req: Request) {
+    async POST(req: NextRequest) {
         await DatabaseService.connect();
 
         const userId = (req as any).userId;
@@ -57,9 +57,9 @@ class OutletController {
             outlet: id
         })
 
-        const pendingRequests = requests.filter((request: any) => request.status === RequestStatus.PENDING).length;
-        const completedRequests = requests.filter((request: any) => request.status === RequestStatus.COMPLETED).length;
-        const expiredRequests = requests.filter((request: any) => request.status === RequestStatus.EXPIRED).length;
+        const pendingRequests = requests.filter((request: any) => ![RequestStatus.DELIVERED, RequestStatus.CANCELLED, RequestStatus.EXPIRED].includes(request.status)).length;
+        const completedRequests = requests.filter((request: any) => [RequestStatus.DELIVERED].includes(request.status)).length;
+        const expiredRequests = requests.filter((request: any) => [RequestStatus.CANCELLED, RequestStatus.EXPIRED].includes(request.status)).length;
 
         const result = {
             outletDetails: outlet,
@@ -78,7 +78,7 @@ class OutletController {
 }
 
 // API route handler for the POST request
-export const POST = async (req: Request, res: Response) => {
+export const POST = async (req: NextRequest) => {
     const controller = new OutletController();
     try {
         return await controller.POST(req);

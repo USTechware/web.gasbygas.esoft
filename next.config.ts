@@ -1,7 +1,6 @@
 import type { NextConfig } from "next";
-const withTM = require("next-transpile-modules")(["class-transformer"]);
 
-const nextConfig: NextConfig = withTM({
+const nextConfig: NextConfig = ({
   devIndicators: {
     appIsrStatus: false
   },

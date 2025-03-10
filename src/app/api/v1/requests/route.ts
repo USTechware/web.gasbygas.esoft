@@ -5,7 +5,7 @@ import Delivery from "@/app/api/models/deliveries.model";
 import Outlet, { IOutlet } from "@/app/api/models/outlet.model";
 import Request, { IRequest } from "@/app/api/models/request.model";
 import { BusinessVerifcationStatus, GasTypesValues, HTTP_STATUS } from "@/constants/common";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { AuthGuard } from "../../middleware/authenticator";
 import { CreateRequestDTO } from "../../dto/requests.dto";
 import { RequestStatus } from "../../types/requests";
@@ -21,7 +21,7 @@ import Product, { IProduct } from "../../models/product.model";
 class RequestsController {
 
     @AuthGuard()
-    async GET(req: Request) {
+    async GET(req: NextRequest) {
         const userId = (req as any).userId;
         const user: IUser | null = await User.findById(userId);
 
@@ -65,7 +65,7 @@ class RequestsController {
     }
     @AuthGuard()
     @ValidateBody(CreateRequestDTO)
-    async POST(req: Request) {
+    async POST(req: NextRequest) {
         await DatabaseService.connect();
 
         const userId = (req as any).userId;
@@ -236,7 +236,7 @@ class RequestsController {
     }
 }
 
-export const POST = async (req: Request, res: Response) => {
+export const POST = async (req: NextRequest) => {
     const controller = new RequestsController();
     try {
         return await controller.POST(req);
@@ -253,7 +253,7 @@ export const POST = async (req: Request, res: Response) => {
 };
 
 
-export const GET = async (req: Request, res: Response) => {
+export const GET = async (req: NextRequest) => {
     const controller = new RequestsController();
     try {
         return await controller.GET(req);

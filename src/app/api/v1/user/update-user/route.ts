@@ -1,7 +1,7 @@
 import DatabaseService from "@/app/api/utils/db";
 import User from "@/app/api/models/user.model";
 import { BusinessVerifcationStatus, HTTP_STATUS } from "@/constants/common";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { AuthGuard } from "@/app/api/middleware/authenticator";
 import { UpdateUserDTO } from "@/app/api/dto/user.dto";
 import { ValidateBody } from "@/app/api/middleware/validator";
@@ -9,7 +9,7 @@ import { ValidateBody } from "@/app/api/middleware/validator";
 class Controller {
     @AuthGuard()
     @ValidateBody(UpdateUserDTO)
-    async put(req: Request) {
+    async put(req: NextRequest) {
         const userId = (req as any).userId;
 
         await DatabaseService.connect();
@@ -48,7 +48,7 @@ class Controller {
     }
 }
 
-export const PUT = async (req: Request, res: Response) => {
+export const PUT = async (req: NextRequest) => {
     const controller = new Controller();
     try {
         return await controller.put(req);

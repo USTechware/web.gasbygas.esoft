@@ -42,7 +42,7 @@ export const outlets = {
     setInventory(state: OutletsState, currentStock: number, stockHistory: IStockHistory[]) {
       return { ...state, currentStock, stockHistory };
     },
-    updateOutletStatus(state: OutletsState, payload: { id: string, isActive: boolean }) {
+    setOutletStatus(state: OutletsState, payload: { id: string, isActive: boolean }) {
       return {
         ...state, list: state.list.map(o => {
           if (o._id === payload.id) {
@@ -112,7 +112,7 @@ export const outlets = {
       try {
         const { status } = await client.put('/api/v1/outlet/status', payload);
         if (status === HTTP_STATUS.OK) {
-          dispatch.outlets.updateOutletStatus(payload)
+          dispatch.outlets.setOutletStatus(payload)
         }
       } catch (error) {
         throw error

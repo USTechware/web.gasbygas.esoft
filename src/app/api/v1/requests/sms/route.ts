@@ -2,7 +2,7 @@
 import DatabaseService from "@/app/api/utils/db";
 import Request, { IRequest } from "@/app/api/models/request.model";
 import { HTTP_STATUS } from "@/constants/common";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { AuthGuard } from "../../../middleware/authenticator";
 import User, { IUser } from "../../../models/user.model";
 import SMSService from "@/app/api/lib/SMSService.lib";
@@ -10,7 +10,7 @@ import SMSService from "@/app/api/lib/SMSService.lib";
 class RequestsController {
 
     @AuthGuard()
-    async POST(req: Request) {
+    async POST(req: NextRequest) {
         await DatabaseService.connect();
 
         const userId = (req as any).userId;
@@ -65,7 +65,7 @@ class RequestsController {
     }
 }
 
-export const POST = async (req: Request, res: Response) => {
+export const POST = async (req: NextRequest) => {
     const controller = new RequestsController();
     try {
         return await controller.POST(req);
